@@ -619,7 +619,7 @@ function ProfilView({ profile, onSave, role, onAdminLogout, ligen, onCreateTeam 
       if (res.erfolg) setPushStatus("granted");
       else if (res.grund === "verweigert") setPushFehler("Benachrichtigungen wurden im Browser blockiert. Erlaubnis in den Browser-Einstellungen für diese Seite prüfen.");
       else if (res.grund === "nicht_unterstuetzt") setPushFehler("Push-Benachrichtigungen werden auf diesem Gerät/Browser nicht unterstützt.");
-      else setPushFehler("Anmeldung fehlgeschlagen. Bitte später erneut versuchen.");
+      else setPushFehler("Anmeldung fehlgeschlagen: " + (res.details || "unbekannter Fehler")
     }
     setPushLaden(false);
   }
