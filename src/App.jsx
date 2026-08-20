@@ -74,6 +74,7 @@ const TILE_META = {
 };
 
 import { supabase } from "./supabaseClient";
+import { pushWirdUnterstuetzt, pushBerechtigungStatus, pushAktivieren, pushDeaktivieren, pushBenachrichtigungSenden } from "./push";
 
 function getDeviceId() {
   let id = localStorage.getItem("padelhouse-device-id");
@@ -601,7 +602,27 @@ function ProfilView({ profile, onSave, role, onAdminLogout, ligen, onCreateTeam 
   const [saved, setSaved] = useState(false);
   const [ligaError, setLigaError] = useState("");
   const [teamModus, setTeamModus] = useState("neu");
+  const [pushStatus, setPushStatus] = useState("default");
+  const [pushLaden, setPushLaden] = useState(false);
+  const [pushFehler, setPushFehler] = useState("");
   useEffect(() => setForm(profile), [profile]);
+  useEffect(() => { pushBerechtigungStatus().then(setPushStatus); }, []);
+
+  async function pushUmschalten() {
+    setPushFehler("");
+    setPushLaden(true);
+    if (pushStatus === "granted") {
+      await pushDeaktivieren();
+      setPushStatus("default");
+    } else {
+      const res = await pushAktivieren();
+      if (res.erfolg) setPushStatus("granted");
+      else if (res.grund === "verweigert") setPushFehler("Benachrichtigungen wurden im Browser blockiert. Erlaubnis in den Browser-Einstellungen für diese Seite prüfen.");
+      else if (res.grund === "nicht_unterstuetzt") setPushFehler("Push-Benachrichtigungen werden auf diesem Gerät/Browser nicht unterstützt.");
+      else setPushFehler("Anmeldung fehlgeschlagen. Bitte später erneut versuchen.");
+    }
+    setPushLaden(false);
+  }
 
   const registriert = !!profile.ligaRegistriert;
   const registrierteLiga = registriert ? ligen.find((l) => l.id === profile.ligaId) : null;
@@ -659,6 +680,16 @@ function ProfilView({ profile, onSave, role, onAdminLogout, ligen, onCreateTeam 
         <Field label="Profilname">
           <input className={inputCls} value={form.profilname || ""} onChange={(e) => setForm({ ...form, profilname: e.target.value })} placeholder="wie du in Chat & Community heißen möchtest" />
         </Field>
+
+        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+          <div className="text-white font-bold text-sm mb-1">Benachrichtigungen</div>
+          <p className="text-zinc-500 text-xs mb-3">Erhalte eine Push-Benachrichtigung bei neuen Chat-Nachrichten und News, auch wenn die App geschlossen ist.</p>
+          <button type="button" onClick={pushUmschalten} disabled={pushLaden}
+            className={"w-full py-2 rounded-lg text-sm font-bold uppercase tracking-wide disabled:opacity-50 " + (pushStatus === "granted" ? "bg-zinc-800 text-zinc-300" : "bg-emerald-500 text-zinc-950")}>
+            {pushLaden ? "Einen Moment..." : pushStatus === "granted" ? "Benachrichtigungen deaktivieren" : "Benachrichtigungen aktivieren"}
+          </button>
+          {pushFehler && <p className="text-red-400 text-xs mt-2">{pushFehler}</p>}
+        </div>
 
         {registriert ? (
           <div className="bg-zinc-900 border border-emerald-700 rounded-lg p-4">
@@ -1260,6 +1291,7 @@ function CommunityView({ news, gruppen, role, profile, onNews, onGruppen, onMark
     if (!newsForm.title.trim() || !newsForm.text.trim()) return;
     const entry = { id: "n-" + Date.now(), title: newsForm.title, text: newsForm.text, date: new Date().toISOString().slice(0, 10) };
     onNews([entry, ...news]);
+    pushBenachrichtigungSenden("Neue News: " + newsForm.title, newsForm.text, "/");
     setNewsForm({ title: "", text: "" });
   }
   function addOpenMatch(e) {
@@ -2051,6 +2083,9 @@ function ChatView({ threads, onSave, chatStatus, onStatus, profile, role }) {
     onSave(nextThreads);
     const updated = nextThreads.find((t) => t.id === activeId);
     onStatus({ ...chatStatus, [activeId]: { ...statusOf(activeId), readCount: updated.messages.length } });
+    if (updated.type === "offen") {
+      pushBenachrichtigungSenden(sender + " im Hallen-Chat", text, "/");
+    }
     setText("");
   }
 
