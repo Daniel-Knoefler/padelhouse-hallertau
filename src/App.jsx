@@ -74,7 +74,7 @@ const TILE_META = {
 };
 
 import { supabase } from "./supabaseClient";
-import { pushWirdUnterstuetzt, pushBerechtigungStatus, pushAktivieren, pushDeaktivieren, pushBenachrichtigungSenden } from "./push";
+import { pushWirdUnterstuetzt, pushBerechtigungStatus, pushAktivieren, pushDeaktivieren, pushBenachrichtigungSenden, pushTeamAktualisieren } from "./push";
 
 function getDeviceId() {
   let id = localStorage.getItem("padelhouse-device-id");
@@ -645,7 +645,7 @@ function ProfilView({ profile, onSave, role, onAdminLogout, ligen, onCreateTeam 
       await pushDeaktivieren();
       setPushStatus("default");
     } else {
-      const res = await pushAktivieren();
+      const res = await pushAktivieren(profile.teamName || null);
       if (res.erfolg) setPushStatus("granted");
       else if (res.grund === "verweigert") setPushFehler("Benachrichtigungen wurden im Browser blockiert. Erlaubnis in den Browser-Einstellungen für diese Seite prüfen.");
       else if (res.grund === "nicht_unterstuetzt") setPushFehler("Push-Benachrichtigungen werden auf diesem Gerät/Browser nicht unterstützt.");
@@ -681,11 +681,13 @@ function ProfilView({ profile, onSave, role, onAdminLogout, ligen, onCreateTeam 
         setLigaError("");
         onCreateTeam(form.ligaId, form.teamName.trim());
         onSave({ ...form, teamName: form.teamName.trim(), ligaRegistriert: true });
+        if (pushStatus === "granted") pushTeamAktualisieren(form.teamName.trim());
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
         return;
       } else {
         if (!form.teamName) return setLigaError("Bitte ein Team auswählen.");
+        if (pushStatus === "granted") pushTeamAktualisieren(form.teamName);
       }
     }
     setLigaError("");
@@ -985,6 +987,12 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
     }
     setVorschlagError({ ...vorschlagError, [spId]: "" });
     persistSpiele(spiele.map((sp) => sp.id === spId ? { ...sp, vorschlaege: [...(sp.vorschlaege || []), { id: "v-" + Date.now(), datum: v.datum, uhrzeit: v.uhrzeit }] } : sp));
+    pushBenachrichtigungSenden(
+      "Neuer Terminvorschlag",
+      `${teamName(sp.heimId)} schlägt vor: ${v.datum}, ${v.uhrzeit} Uhr`,
+      "/",
+      teamName(sp.gastId)
+    );
     setVorschlagForms({ ...vorschlagForms, [spId]: { datum: "", uhrzeit: "" } });
   }
   function acceptVorschlag(spId, vorschlag) {
