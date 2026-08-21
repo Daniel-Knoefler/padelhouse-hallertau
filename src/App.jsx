@@ -155,6 +155,19 @@ function CourtDivider() {
     </div>
   );
 }
+function GlockeButton({ badge, onClick }) {
+  return (
+    <button onClick={onClick} className="relative w-8 h-8 rounded-full bg-black border border-zinc-700 flex items-center justify-center text-emerald-400 shrink-0" aria-label="Benachrichtigungen">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 8a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z" /><path d="M10 20a2 2 0 0 0 4 0" /></svg>
+      {badge > 0 && (
+        <span className="absolute -top-1 -right-1 bg-emerald-500 text-zinc-950 text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center">
+          {badge}
+        </span>
+      )}
+    </button>
+  );
+}
+
 function TileIcon({ tileKey }) {
   const common = { width: 16, height: 16, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
   switch (tileKey) {
@@ -501,7 +514,10 @@ export default function PadelhouseApp() {
       {view !== "home" && (
         <header className="flex items-center gap-3 mb-6">
           <button onClick={() => setView("home")} className="text-emerald-400 text-xl leading-none" aria-label="Zurück">←</button>
-          <div className="text-lg font-black uppercase tracking-wide text-white">{TILE_META[view]?.label || "Padelhouse"}</div>
+          <div className="text-lg font-black uppercase tracking-wide text-white flex-1">{TILE_META[view]?.label || "Padelhouse"}</div>
+          {view !== "benachrichtigungen" && (
+            <GlockeButton badge={unreadBenachrichtigungen} onClick={() => setView("benachrichtigungen")} />
+          )}
         </header>
       )}
 
@@ -513,6 +529,7 @@ export default function PadelhouseApp() {
                 <button onClick={handleLogoTap} className="w-8 h-8 rounded-full bg-black border-2 border-white flex items-center justify-center shrink-0 overflow-hidden" aria-label="Padelhouse Logo">
                   <img src={LOGO_DATA_URI} alt="Padelhouse Hallertau Logo" className="w-full h-full object-cover" />
                 </button>
+                <GlockeButton badge={unreadBenachrichtigungen} onClick={() => setView("benachrichtigungen")} />
                 <div className="text-white font-black uppercase tracking-wide text-xs leading-tight">Padelhouse Hallertau</div>
               </div>
               <button onClick={() => setView("profil")} className="w-7 h-7 rounded-full bg-black border border-zinc-700 flex items-center justify-center text-emerald-400 font-black text-xs" aria-label="Profil">
