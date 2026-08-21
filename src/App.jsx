@@ -276,7 +276,11 @@ function Modal({ title, onClose, children }) {
 
 export default function PadelhouseApp() {
   const [role, setRole] = useState("gast");
-  const [view, setView] = useState("home");
+  const [view, setView] = useState(() => {
+    if (typeof window === "undefined") return "home";
+    const zielAusUrl = new URLSearchParams(window.location.search).get("view");
+    return zielAusUrl || "home";
+  });
   const [moveMode, setMoveMode] = useState(false);
   const [tileOrder, setTileOrder] = useState(TILES_DEFAULT);
   const [profile, setProfile] = useState({ name: "", email: "", telefon: "", profilname: "", ligaTeilnahme: false, ligaId: null, teamName: "", ligaRegistriert: false });
@@ -325,6 +329,12 @@ export default function PadelhouseApp() {
   const [benachrichtigungen, setBenachrichtigungen] = useState([]);
   const [benachrichtigungenGelesenBis, setBenachrichtigungenGelesenBis] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (window.location.search.includes("view=")) {
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
 
   useEffect(() => {
     async function loadAll() {
@@ -647,7 +657,7 @@ export default function PadelhouseApp() {
       )}
 
       {view === "benachrichtigungen" && (
-        <BenachrichtigungenView benachrichtigungen={benachrichtigungen} />
+        <BenachrichtigungenView benachrichtigungen={benachrichtigungen} onSpringen={setView} />
       )}
 
       {view === "admin" && role === "admin" && (
@@ -1047,7 +1057,7 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
     pushBenachrichtigungSenden(
       "Neuer Terminvorschlag",
       `${teamName(sp.heimId)} schlägt vor: ${v.datum}, ${v.uhrzeit} Uhr`,
-      "/",
+      "/?view=liga",
       teamName(sp.gastId)
     );
     setVorschlagForms({ ...vorschlagForms, [spId]: { datum: "", uhrzeit: "" } });
@@ -1405,7 +1415,7 @@ function CommunityView({ news, gruppen, role, profile, onNews, onGruppen, onMark
     if (!newsForm.title.trim() || !newsForm.text.trim()) return;
     const entry = { id: "n-" + Date.now(), title: newsForm.title, text: newsForm.text, date: new Date().toISOString().slice(0, 10) };
     onNews([entry, ...news]);
-    pushBenachrichtigungSenden("Neue News: " + newsForm.title, newsForm.text, "/");
+    pushBenachrichtigungSenden("Neue News: " + newsForm.title, newsForm.text, "/?view=community");
     setNewsForm({ title: "", text: "" });
   }
   function addOpenMatch(e) {
@@ -2198,7 +2208,7 @@ function ChatView({ threads, onSave, chatStatus, onStatus, profile, role }) {
     const updated = nextThreads.find((t) => t.id === activeId);
     onStatus({ ...chatStatus, [activeId]: { ...statusOf(activeId), readCount: updated.messages.length } });
     if (updated.type === "offen") {
-      pushBenachrichtigungSenden(sender + " im Hallen-Chat", text, "/");
+      pushBenachrichtigungSenden(sender + " im Hallen-Chat", text, "/?view=chat");
     }
     setText("");
   }
@@ -2417,7 +2427,7 @@ function TechnikView() {
   );
 }
 
-function BenachrichtigungenView({ benachrichtigungen }) {
+function BenachrichtigungenView({ benachrichtigungen, onSpringen }) {
   function formatiereZeit(iso) {
     try {
       const d = new Date(iso);
@@ -2426,20 +2436,33 @@ function BenachrichtigungenView({ benachrichtigungen }) {
       return "";
     }
   }
+  function zielAusUrl(url) {
+    try {
+      const params = new URLSearchParams((url || "").split("?")[1] || "");
+      return params.get("view");
+    } catch (e) {
+      return null;
+    }
+  }
   return (
     <div>
-      <p className="text-zinc-400 text-sm mb-4">Verlauf aller Push-Benachrichtigungen, die auf diesem Gerät angekommen sind – auch wenn die Systembenachrichtigung schon verschwunden ist.</p>
+      <p className="text-zinc-400 text-sm mb-4">Verlauf aller Push-Benachrichtigungen, die auf diesem Gerät angekommen sind – auch wenn die Systembenachrichtigung schon verschwunden ist. Antippen springt direkt zum passenden Bereich.</p>
       {benachrichtigungen.length === 0 ? (
         <p className="text-zinc-500 text-sm">Noch keine Benachrichtigungen erhalten.</p>
       ) : (
         <div className="space-y-2">
-          {benachrichtigungen.map((n) => (
-            <div key={n.id} className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-              <div className="text-zinc-500 text-xs mb-1">{formatiereZeit(n.created_at)}</div>
-              <div className="text-white font-bold text-sm">{n.title}</div>
-              {n.body && <div className="text-zinc-400 text-sm mt-1">{n.body}</div>}
-            </div>
-          ))}
+          {benachrichtigungen.map((n) => {
+            const ziel = zielAusUrl(n.url);
+            const Wrapper = ziel ? "button" : "div";
+            return (
+              <Wrapper key={n.id} onClick={ziel ? () => onSpringen(ziel) : undefined}
+                className={"w-full text-left bg-zinc-900 border border-zinc-800 rounded-lg p-4" + (ziel ? " active:border-emerald-600" : "")}>
+                <div className="text-zinc-500 text-xs mb-1">{formatiereZeit(n.created_at)}</div>
+                <div className="text-white font-bold text-sm">{n.title}</div>
+                {n.body && <div className="text-zinc-400 text-sm mt-1">{n.body}</div>}
+              </Wrapper>
+            );
+          })}
         </div>
       )}
     </div>
