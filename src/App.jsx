@@ -337,6 +337,19 @@ export default function PadelhouseApp() {
   }, []);
 
   useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    function onMessage(event) {
+      if (event.data?.type === "padelhouse-navigate" && event.data.url) {
+        const params = new URLSearchParams(event.data.url.split("?")[1] || "");
+        const ziel = params.get("view");
+        if (ziel) setView(ziel);
+      }
+    }
+    navigator.serviceWorker.addEventListener("message", onMessage);
+    return () => navigator.serviceWorker.removeEventListener("message", onMessage);
+  }, []);
+
+  useEffect(() => {
     async function loadAll() {
       const [sp, lg, comm, k, anf, tur, vm, ch, cs, id, nrc, irc, bf, gs, kb, bp, fp, ct, mb, gb, prof, order, istAdmin] = await Promise.all([
         loadKey("liga-spielplan", true, []),
