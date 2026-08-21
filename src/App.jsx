@@ -362,6 +362,36 @@ export default function PadelhouseApp() {
     loadAll();
   }, []);
 
+  async function refreshSharedData() {
+    const [sp, lg, comm, k, tur, ch, id, bp, fp, ct] = await Promise.all([
+      loadKey("liga-spielplan", true, []),
+      loadKey("ligen", true, LIGEN_SEED),
+      loadKey("community-daten", true, { news: NEWS_SEED, gruppen: GRUPPEN_SEED }),
+      loadKey("training-kurse", true, TRAINING_SEED),
+      loadKey("turniere", true, []),
+      loadKey("chat-threads", true, CHAT_SEED),
+      loadKey("wuensche-ideen", true, WUENSCHE_SEED),
+      loadKey("ballmaschine-preis", true, ""),
+      loadKey("fanshop-produkte", true, FANSHOP_SEED),
+      loadKey("courts", true, COURTS_SEED),
+    ]);
+    setSpiele(sp);
+    setLigen(lg);
+    setNews(comm.news || NEWS_SEED);
+    setGruppen(comm.gruppen || GRUPPEN_SEED);
+    setKurse(k);
+    setTurniere(tur);
+    setThreads(ch);
+    setIdeen(id);
+    setBallmaschinePreis(bp);
+    setFanshopProdukte(fp);
+    setCourts(ct);
+  }
+
+  useEffect(() => {
+    if (!loading) refreshSharedData();
+  }, [view]);
+
   function persistSpiele(next) { setSpiele(next); saveKey("liga-spielplan", true, next); }
   function persistLigen(next) { setLigen(next); saveKey("ligen", true, next); }
   function createTeamInLiga(ligaId, teamName) {
