@@ -36,7 +36,7 @@ export async function pushAktivieren(teamName) {
   if (permission !== "granted") return { erfolg: false, grund: "verweigert" };
 
   try {
-    const registration = await navigator.serviceWorker.register("/sw.js");
+    const registration = await navigator.serviceWorker.register(`/sw.js?deviceId=${encodeURIComponent(getDeviceId())}`);
     await navigator.serviceWorker.ready;
 
     let subscription = await registration.pushManager.getSubscription();
@@ -78,12 +78,19 @@ export async function pushDeaktivieren() {
   await supabase.from("push_subscriptions").delete().eq("device_id", getDeviceId());
 }
 
-export async function pushBenachrichtigungSenden(titel, text, url, teamName) {
-  try {
-    await supabase.functions.invoke("send-push", {
-      body: { title: titel, body: text, url: url || "/", teamName: teamName || null },
-    });
-  } catch (e) {
-    console.error("Push-Versand fehlgeschlagen:", e);
-  }
+export function pushBenachrichtigungSenden(titel, text, url, teamName) {
+  return supabase.functions.invoke("send-push", {
+    body: { title: titel, body: text, url: url || "/", teamName: teamName || null },
+  }).catch((e) => console.error("Push-Versand fehlgeschlagen:", e));
+}
+
+export async function benachrichtigungenLaden(limit = 40) {
+  const { data, error } = await supabase
+    .from("notification_log")
+    .select("*")
+    .eq("device_id", getDeviceId())
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) return [];
+  return data || [];
 }
