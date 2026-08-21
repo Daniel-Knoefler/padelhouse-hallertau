@@ -75,7 +75,7 @@ const TILE_META = {
 };
 
 import { supabase } from "./supabaseClient";
-import { pushWirdUnterstuetzt, pushBerechtigungStatus, pushAktivieren, pushDeaktivieren, pushBenachrichtigungSenden, pushTeamAktualisieren, benachrichtigungenLaden } from "./push";
+import { pushWirdUnterstuetzt, pushBerechtigungStatus, pushAktivieren, pushDeaktivieren, pushBenachrichtigungSenden, pushTeamAktualisieren, benachrichtigungenLaden, benachrichtigungLoeschen, alleBenachrichtigungenLoeschen } from "./push";
 
 function getDeviceId() {
   let id = localStorage.getItem("padelhouse-device-id");
@@ -465,6 +465,14 @@ export default function PadelhouseApp() {
   function persistCourts(next) { setCourts(next); saveKey("courts", true, next); }
   function persistMeineBuchungen(next) { setMeineBuchungen(next); saveKey("meine-buchungen", false, next); }
   function persistBenachrichtigungenGelesenBis(next) { setBenachrichtigungenGelesenBis(next); saveKey("benachrichtigungen-gelesen-bis", false, next); }
+  function benachrichtigungLoeschenHandler(id) {
+    setBenachrichtigungen((prev) => prev.filter((n) => n.id !== id));
+    benachrichtigungLoeschen(id);
+  }
+  function alleBenachrichtigungenLoeschenHandler() {
+    setBenachrichtigungen([]);
+    alleBenachrichtigungenLoeschen();
+  }
   function persistProfile(next) { setProfile(next); saveKey("mein-profil", false, next); }
   function persistOrder(next) { setTileOrder(next); saveKey("tile-order", false, next); }
 
@@ -670,7 +678,7 @@ export default function PadelhouseApp() {
       )}
 
       {view === "benachrichtigungen" && (
-        <BenachrichtigungenView benachrichtigungen={benachrichtigungen} onSpringen={setView} />
+        <BenachrichtigungenView benachrichtigungen={benachrichtigungen} onSpringen={setView} onLoeschen={benachrichtigungLoeschenHandler} onAlleLoeschen={alleBenachrichtigungenLoeschenHandler} />
       )}
 
       {view === "admin" && role === "admin" && (
@@ -2440,7 +2448,7 @@ function TechnikView() {
   );
 }
 
-function BenachrichtigungenView({ benachrichtigungen, onSpringen }) {
+function BenachrichtigungenView({ benachrichtigungen, onSpringen, onLoeschen, onAlleLoeschen }) {
   function formatiereZeit(iso) {
     try {
       const d = new Date(iso);
@@ -2460,23 +2468,36 @@ function BenachrichtigungenView({ benachrichtigungen, onSpringen }) {
   return (
     <div>
       <p className="text-zinc-400 text-sm mb-4">Verlauf aller Push-Benachrichtigungen, die auf diesem Gerät angekommen sind – auch wenn die Systembenachrichtigung schon verschwunden ist. Antippen springt direkt zum passenden Bereich.</p>
+      {benachrichtigungen.length > 0 && (
+        <button onClick={onAlleLoeschen} className="w-full mb-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 text-xs font-bold uppercase tracking-wide">
+          Alle löschen
+        </button>
+      )}
       {benachrichtigungen.length === 0 ? (
         <p className="text-zinc-500 text-sm">Noch keine Benachrichtigungen erhalten.</p>
       ) : (
         <div className="space-y-2">
           {benachrichtigungen.map((n) => {
             const ziel = zielAusUrl(n.url);
-            const Wrapper = ziel ? "button" : "div";
             return (
-              <Wrapper key={n.id} onClick={ziel ? () => onSpringen(ziel) : undefined}
-                className={"w-full text-left bg-zinc-900 border border-zinc-800 rounded-lg p-4" + (ziel ? " active:border-emerald-600" : "")}>
-                <div className="text-zinc-500 text-xs mb-1">{formatiereZeit(n.created_at)}</div>
-                <div className="text-white font-bold text-sm">{n.title}</div>
-                {n.body && <div className="text-zinc-400 text-sm mt-1">{n.body}</div>}
-              </Wrapper>
+              <div key={n.id} className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+                <div className="flex justify-between items-start gap-2">
+                  <button onClick={ziel ? () => onSpringen(ziel) : undefined} disabled={!ziel}
+                    className={"flex-1 text-left" + (ziel ? " active:opacity-70" : "")}>
+                    <div className="text-zinc-500 text-xs mb-1">{formatiereZeit(n.created_at)}</div>
+                    <div className="text-white font-bold text-sm">{n.title}</div>
+                    {n.body && <div className="text-zinc-400 text-sm mt-1">{n.body}</div>}
+                  </button>
+                  <button onClick={() => onLoeschen(n.id)} className="text-zinc-600 text-xs uppercase tracking-wide shrink-0 px-1" aria-label="Löschen">✕</button>
+                </div>
+              </div>
             );
           })}
         </div>
+      )}
+    </div>
+  );
+}
       )}
     </div>
   );
