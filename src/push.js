@@ -94,3 +94,11 @@ export async function benachrichtigungenLaden(limit = 40) {
   if (error) return [];
   return data || [];
 }
+
+export async function benachrichtigungLoeschen(id) {
+  await supabase.from("notification_log").delete().eq("id", id).eq("device_id", getDeviceId());
+}
+
+export async function alleBenachrichtigungenLoeschen() {
+  await supabase.from("notification_log").delete().eq("device_id", getDeviceId());
+}
