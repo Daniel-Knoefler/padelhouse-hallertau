@@ -60,9 +60,7 @@ self.addEventListener("notificationclick", (event) => {
     clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
         if (client.url.includes(self.location.origin) && "focus" in client) {
-          if ("navigate" in client) {
-            return client.navigate(url).then((c) => c.focus());
-          }
+          client.postMessage({ type: "padelhouse-navigate", url });
           return client.focus();
         }
       }
