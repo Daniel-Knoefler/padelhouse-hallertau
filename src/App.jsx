@@ -2498,10 +2498,6 @@ function BenachrichtigungenView({ benachrichtigungen, onSpringen, onLoeschen, on
     </div>
   );
 }
-      )}
-    </div>
-  );
-}
 
 function MeineBuchungenView({ buchungen, onSave, courts, onCourts, role }) {
   const [showForm, setShowForm] = useState(false);
