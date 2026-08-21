@@ -50,8 +50,6 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const url = event.notification.data?.url || "/";
-  const absoluteUrl = new URL(url, self.location.origin).href;
 
   if (self.navigator && "clearAppBadge" in self.navigator) {
     self.navigator.clearAppBadge().catch(() => {});
@@ -61,11 +59,10 @@ self.addEventListener("notificationclick", (event) => {
     clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
         if (client.url.includes(self.location.origin) && "focus" in client) {
-          client.postMessage({ type: "padelhouse-navigate", url });
           return client.focus();
         }
       }
-      if (clients.openWindow) return clients.openWindow(absoluteUrl);
+      if (clients.openWindow) return clients.openWindow("/");
     })
   );
 });
