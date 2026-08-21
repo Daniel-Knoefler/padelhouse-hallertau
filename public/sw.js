@@ -51,6 +51,7 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const url = event.notification.data?.url || "/";
+  const absoluteUrl = new URL(url, self.location.origin).href;
 
   if (self.navigator && "clearAppBadge" in self.navigator) {
     self.navigator.clearAppBadge().catch(() => {});
@@ -64,7 +65,7 @@ self.addEventListener("notificationclick", (event) => {
           return client.focus();
         }
       }
-      if (clients.openWindow) return clients.openWindow(url);
+      if (clients.openWindow) return clients.openWindow(absoluteUrl);
     })
   );
 });
