@@ -84,6 +84,12 @@ export function pushBenachrichtigungSenden(titel, text, url, teamName) {
   }).catch((e) => console.error("Push-Versand fehlgeschlagen:", e));
 }
 
+export function pushAdminEmailSenden(betreff, text) {
+  return supabase.functions.invoke("send-admin-email", {
+    body: { subject: betreff, text },
+  }).catch((e) => console.error("Admin-E-Mail fehlgeschlagen:", e));
+}
+
 export async function benachrichtigungenLaden(limit = 40) {
   const { data, error } = await supabase
     .from("notification_log")
