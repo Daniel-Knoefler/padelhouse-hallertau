@@ -76,7 +76,7 @@ const TILE_META = {
 };
 
 import { supabase } from "./supabaseClient";
-import { pushWirdUnterstuetzt, pushBerechtigungStatus, pushAktivieren, pushDeaktivieren, pushBenachrichtigungSenden, pushTeamAktualisieren, benachrichtigungenLaden, benachrichtigungLoeschen, alleBenachrichtigungenLoeschen } from "./push";
+import { pushWirdUnterstuetzt, pushBerechtigungStatus, pushAktivieren, pushDeaktivieren, pushBenachrichtigungSenden, pushTeamAktualisieren, benachrichtigungenLaden, benachrichtigungLoeschen, alleBenachrichtigungenLoeschen, pushAdminEmailSenden } from "./push";
 
 function getDeviceId() {
   let id = localStorage.getItem("padelhouse-device-id");
@@ -314,6 +314,7 @@ export default function PadelhouseApp() {
   const [kurse, setKurse] = useState(TRAINING_SEED);
   const [anfragen, setAnfragen] = useState([]);
   const [turniere, setTurniere] = useState([]);
+  const [events, setEvents] = useState(EVENTS_SEED);
   const [vormerkungen, setVormerkungen] = useState([]);
   const [benefitAnfragen, setBenefitAnfragen] = useState([]);
   const [threads, setThreads] = useState(CHAT_SEED);
@@ -352,13 +353,14 @@ export default function PadelhouseApp() {
 
   useEffect(() => {
     async function loadAll() {
-      const [sp, lg, comm, k, anf, tur, vm, ch, cs, id, nrc, irc, bf, gs, kb, bp, fp, ct, mb, gb, prof, order, istAdmin] = await Promise.all([
+      const [sp, lg, comm, k, anf, tur, ev, vm, ch, cs, id, nrc, irc, bf, gs, kb, bp, fp, ct, mb, gb, prof, order, istAdmin] = await Promise.all([
         loadKey("liga-spielplan", true, []),
         loadKey("ligen", true, LIGEN_SEED),
         loadKey("community-daten", true, { news: NEWS_SEED, gruppen: GRUPPEN_SEED }),
         loadKey("training-kurse", true, TRAINING_SEED),
         loadKey("buchungsanfragen", false, []),
         loadKey("turniere", true, []),
+        loadKey("events", true, EVENTS_SEED),
         loadKey("fanshop-vormerkungen", false, []),
         loadKey("chat-threads", true, CHAT_SEED),
         loadKey("chat-status", false, {}),
@@ -384,6 +386,7 @@ export default function PadelhouseApp() {
       setKurse(k);
       setAnfragen(anf);
       setTurniere(tur);
+      setEvents(ev);
       setVormerkungen(vm);
       setThreads(ch);
       setChatStatus(cs);
@@ -408,12 +411,13 @@ export default function PadelhouseApp() {
   }, []);
 
   async function refreshSharedData() {
-    const [sp, lg, comm, k, tur, ch, id, bp, fp, ct] = await Promise.all([
+    const [sp, lg, comm, k, tur, ev, ch, id, bp, fp, ct] = await Promise.all([
       loadKey("liga-spielplan", true, []),
       loadKey("ligen", true, LIGEN_SEED),
       loadKey("community-daten", true, { news: NEWS_SEED, gruppen: GRUPPEN_SEED }),
       loadKey("training-kurse", true, TRAINING_SEED),
       loadKey("turniere", true, []),
+      loadKey("events", true, EVENTS_SEED),
       loadKey("chat-threads", true, CHAT_SEED),
       loadKey("wuensche-ideen", true, WUENSCHE_SEED),
       loadKey("ballmaschine-preis", true, ""),
@@ -426,6 +430,7 @@ export default function PadelhouseApp() {
     setGruppen(comm.gruppen || GRUPPEN_SEED);
     setKurse(k);
     setTurniere(tur);
+    setEvents(ev);
     setThreads(ch);
     setIdeen(id);
     setBallmaschinePreis(bp);
@@ -452,6 +457,7 @@ export default function PadelhouseApp() {
   function persistKurse(next) { setKurse(next); saveKey("training-kurse", true, next); }
   function persistAnfragen(next) { setAnfragen(next); saveKey("buchungsanfragen", false, next); }
   function persistTurniere(next) { setTurniere(next); saveKey("turniere", true, next); }
+  function persistEvents(next) { setEvents(next); saveKey("events", true, next); }
   function persistVormerkungen(next) { setVormerkungen(next); saveKey("fanshop-vormerkungen", false, next); }
   function persistBenefitAnfragen(next) { setBenefitAnfragen(next); saveKey("firmenbenefit-anfragen", false, next); }
   function persistThreads(next) { setThreads(next); saveKey("chat-threads", true, next); }
@@ -652,7 +658,7 @@ export default function PadelhouseApp() {
       )}
 
       {view === "buchung" && (
-        <BuchungView anfragen={anfragen} onAnfragen={persistAnfragen} turniere={turniere} onTurniere={persistTurniere} role={role} preisProStunde={ballmaschinePreis} onPreis={persistBallmaschinePreis} />
+        <BuchungView anfragen={anfragen} onAnfragen={persistAnfragen} turniere={turniere} onTurniere={persistTurniere} events={events} onEvents={persistEvents} role={role} preisProStunde={ballmaschinePreis} onPreis={persistBallmaschinePreis} />
       )}
 
       {view === "fanshop" && (
@@ -1451,6 +1457,21 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
   );
 }
 
+function ChatBubble({ m, eigene, zeigeName, onLoeschen }) {
+  return (
+    <div className={"flex " + (eigene ? "justify-end" : "justify-start")}>
+      <div className={"max-w-[78%] rounded-2xl px-3 py-1.5 shadow " + (eigene ? "bg-emerald-700 rounded-br-sm" : "bg-zinc-700 rounded-bl-sm")}>
+        {!eigene && zeigeName && <div className="text-emerald-300 text-xs font-bold">{m.from}</div>}
+        <div className="text-white text-sm whitespace-pre-wrap break-words">{m.text}</div>
+        <div className="flex items-center justify-end gap-2 mt-0.5">
+          <span className="text-[10px] text-white/60">{m.zeit}</span>
+          {onLoeschen && <button onClick={onLoeschen} className="text-[10px] text-white/50 uppercase">✕</button>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CommunityView({ news, gruppen, role, profile, onNews, onGruppen, onMarkRead, gruppenStatus, onGruppenStatus }) {
   const [tab, setTab] = useState("news");
   const [newsForm, setNewsForm] = useState({ title: "", text: "" });
@@ -1463,8 +1484,14 @@ function CommunityView({ news, gruppen, role, profile, onNews, onGruppen, onMark
   const [omLink, setOmLink] = useState("");
   const [gruppeText, setGruppeText] = useState("");
   const [renameInput, setRenameInput] = useState("");
+  const gruppenBottomRef = useRef(null);
+  const gruppenSender = profile.profilname || profile.name || (role === "admin" ? "Admin" : "Ich");
 
   useEffect(() => { onMarkRead(news.length); }, [news.length]);
+
+  useEffect(() => {
+    if (openGruppeId) gruppenBottomRef.current?.scrollIntoView({ block: "end" });
+  }, [openGruppeId, gruppen.find((g) => g.id === openGruppeId)?.messages?.length]);
 
   function statusOf(id) { return gruppenStatus[id] || { hidden: false, muted: false, beigetreten: false, readCount: 0 }; }
   function hideGruppe(id) { onGruppenStatus({ ...gruppenStatus, [id]: { ...statusOf(id), hidden: true } }); }
@@ -1647,27 +1674,20 @@ function CommunityView({ news, gruppen, role, profile, onNews, onGruppen, onMark
 
             <div className="mt-4 pt-4 border-t border-zinc-800">
               <div className="text-xs text-emerald-500 uppercase tracking-wide font-bold mb-2">Gruppen-Chat</div>
-              <div className="space-y-2 mb-3 max-h-64 overflow-y-auto">
+              <div className="space-y-1.5 mb-3 max-h-64 overflow-y-auto px-1 py-2 rounded-lg" style={{ background: "#0b141a" }}>
                 {g.messages.length === 0 ? (
-                  <p className="text-zinc-500 text-sm">Noch keine Nachrichten.</p>
+                  <p className="text-zinc-500 text-sm text-center py-4">Noch keine Nachrichten.</p>
                 ) : g.messages.map((m, i) => (
-                  <div key={i} className="bg-zinc-950 border border-zinc-800 rounded-lg p-2">
-                    <div className="flex justify-between text-xs text-zinc-500 mb-1">
-                      <span className="text-emerald-400 font-bold">{m.from}</span>
-                      <span className="flex items-center gap-2">
-                        {m.zeit}
-                        {role === "admin" && (
-                          <button onClick={() => onGruppen(gruppen.map((gg) => gg.id === g.id ? { ...gg, messages: gg.messages.filter((_, idx) => idx !== i) } : gg))} className="text-zinc-500 uppercase tracking-wide">Löschen</button>
-                        )}
-                      </span>
-                    </div>
-                    <div className="text-zinc-200 text-sm">{m.text}</div>
-                  </div>
+                  <ChatBubble key={i} m={m} eigene={m.from === gruppenSender} zeigeName={true}
+                    onLoeschen={role === "admin" ? () => onGruppen(gruppen.map((gg) => gg.id === g.id ? { ...gg, messages: gg.messages.filter((_, idx) => idx !== i) } : gg)) : null} />
                 ))}
+                <div ref={gruppenBottomRef} />
               </div>
               <div className="flex gap-2">
-                <input className={inputCls} placeholder="Nachricht schreiben..." value={gruppeText} onChange={(e) => setGruppeText(e.target.value)} />
-                <button onClick={() => sendGruppenNachricht(g.id)} className="px-4 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold">Senden</button>
+                <input className={inputCls + " rounded-full"} placeholder="Nachricht schreiben..." value={gruppeText} onChange={(e) => setGruppeText(e.target.value)} />
+                <button onClick={() => sendGruppenNachricht(g.id)} className="w-10 h-10 rounded-full bg-emerald-500 text-zinc-950 flex items-center justify-center shrink-0" aria-label="Senden">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20l18-8L3 4v6l12 2-12 2v6Z" /></svg>
+                </button>
               </div>
             </div>
           </Modal>
@@ -1925,7 +1945,7 @@ function whatsappLink(text) {
   return `https://wa.me/${OPERATOR_WHATSAPP}?text=${encodeURIComponent(text)}`;
 }
 
-function BuchungView({ anfragen, onAnfragen, turniere, onTurniere, role, preisProStunde, onPreis }) {
+function BuchungView({ anfragen, onAnfragen, turniere, onTurniere, events, onEvents, role, preisProStunde, onPreis }) {
   const [tab, setTab] = useState("events");
   const [confirm, setConfirm] = useState(null);
   const [mailLink, setMailLink] = useState(null);
@@ -1938,6 +1958,8 @@ function BuchungView({ anfragen, onAnfragen, turniere, onTurniere, role, preisPr
   const [bmForm, setBmForm] = useState({ name: "", email: "", datum: "", uhrzeit: "", zahlung: "bar" });
   const [turnierForm, setTurnierForm] = useState({ name: "", format: TURNIER_FORMATE[0], datum: "" });
   const [showTurnierForm, setShowTurnierForm] = useState(false);
+  const [neuesEventForm, setNeuesEventForm] = useState({ titel: "", datum: "", beschreibung: "" });
+  const [showEventForm, setShowEventForm] = useState(false);
 
   function savePreis() {
     onPreis(preisInput);
@@ -1947,6 +1969,8 @@ function BuchungView({ anfragen, onAnfragen, turniere, onTurniere, role, preisPr
     e.preventDefault();
     if (!eventForm.name.trim() || !eventForm.email.trim() || !eventForm.personen) return;
     onAnfragen([...anfragen, { id: "a-" + Date.now(), type: "event", eventId: eventTarget, ...eventForm }]);
+    const evName = events.find((ev) => ev.id === eventTarget)?.titel || "Veranstaltung";
+    pushAdminEmailSenden(`Neue Event-Anmeldung: ${evName}`, `Name: ${eventForm.name}\nE-Mail: ${eventForm.email}\nPersonen: ${eventForm.personen}`);
     setConfirm("Anmeldung für die Veranstaltung ist eingegangen.");
     setMailLink(null); setWaLink(null);
     setEventForm({ name: "", email: "", personen: "" }); setEventTarget(null);
@@ -1959,6 +1983,7 @@ function BuchungView({ anfragen, onAnfragen, turniere, onTurniere, role, preisPr
     const text = `Privatevent-Anfrage: ${peForm.art}\nName: ${peForm.name}\nE-Mail: ${peForm.email}\nTelefon: ${peForm.telefon}\nWunschdatum: ${peForm.datum}\nPersonenanzahl: ${peForm.personen}\nNachricht: ${peForm.nachricht}`;
     setMailLink(mailtoLink(`Privatevent-Anfrage: ${peForm.art}`, text));
     setWaLink(whatsappLink(text));
+    pushAdminEmailSenden(`Neue Privatevent-Anfrage: ${peForm.art}`, text);
     setPeForm({ art: "", name: "", email: "", telefon: "", datum: "", personen: "", nachricht: "" });
   }
   function reserveBallmaschine(e) {
@@ -1969,14 +1994,28 @@ function BuchungView({ anfragen, onAnfragen, turniere, onTurniere, role, preisPr
     const text = `Ballmaschine reserviert\nName: ${bmForm.name}\nE-Mail: ${bmForm.email}\nDatum: ${bmForm.datum}\nUhrzeit: ${bmForm.uhrzeit}\nZahlungsart: ${bmForm.zahlung === "bar" ? "Barzahlung vor Ort" : "Überweisung"}\n\nBitte dem Kunden vor Terminbeginn den Schloss-Code mitteilen.`;
     setMailLink(mailtoLink("Ballmaschine reserviert", text));
     setWaLink(whatsappLink(text));
+    pushAdminEmailSenden("Neue Ballmaschinen-Reservierung", text);
     setBmForm({ name: "", email: "", datum: "", uhrzeit: "", zahlung: "bar" });
   }
   function addTurnier(e) {
     e.preventDefault();
     if (!turnierForm.name.trim() || !turnierForm.datum) return;
     onTurniere([...turniere, { id: "tu-" + Date.now(), ...turnierForm }]);
+    pushBenachrichtigungSenden("Neues Turnier: " + turnierForm.name, `${turnierForm.format} · ${turnierForm.datum}`, "/?view=buchung");
     setTurnierForm({ name: "", format: TURNIER_FORMATE[0], datum: "" });
     setShowTurnierForm(false);
+  }
+  function addEvent(e) {
+    e.preventDefault();
+    if (!neuesEventForm.titel.trim() || !neuesEventForm.datum) return;
+    onEvents([...events, { id: "ev-" + Date.now(), ...neuesEventForm }]);
+    pushBenachrichtigungSenden("Neue Veranstaltung: " + neuesEventForm.titel, `${neuesEventForm.datum}${neuesEventForm.beschreibung ? " · " + neuesEventForm.beschreibung : ""}`, "/?view=buchung");
+    setNeuesEventForm({ titel: "", datum: "", beschreibung: "" });
+    setShowEventForm(false);
+  }
+  function loescheEvent(id) {
+    if (!window.confirm("Diese Veranstaltung wirklich löschen?")) return;
+    onEvents(events.filter((ev) => ev.id !== id));
   }
 
   return (
@@ -2008,9 +2047,18 @@ function BuchungView({ anfragen, onAnfragen, turniere, onTurniere, role, preisPr
 
       {tab === "events" && (
         <div className="space-y-3">
-          {EVENTS_SEED.map((ev) => (
+          {role === "admin" && (
+            <button onClick={() => setShowEventForm(true)} className="w-full mb-1 py-2 rounded-lg bg-zinc-800 text-emerald-400 font-bold uppercase tracking-wide text-sm">
+              + Neue Veranstaltung anlegen
+            </button>
+          )}
+          {events.length === 0 && <p className="text-zinc-500 text-sm">Aktuell keine Veranstaltungen.</p>}
+          {events.map((ev) => (
             <div key={ev.id} className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-              <div className="text-white font-bold">{ev.titel}</div>
+              <div className="flex justify-between items-start">
+                <div className="text-white font-bold">{ev.titel}</div>
+                {role === "admin" && <button onClick={() => loescheEvent(ev.id)} className="text-xs text-red-400 uppercase tracking-wide shrink-0">Löschen</button>}
+              </div>
               <div className="text-zinc-500 text-xs mt-1">{ev.datum}</div>
               <div className="text-zinc-400 text-sm mt-1">{ev.beschreibung}</div>
 
@@ -2027,6 +2075,17 @@ function BuchungView({ anfragen, onAnfragen, turniere, onTurniere, role, preisPr
             </div>
           ))}
         </div>
+      )}
+
+      {showEventForm && (
+        <Modal title="Neue Veranstaltung anlegen" onClose={() => setShowEventForm(false)}>
+          <form onSubmit={addEvent} className="space-y-3">
+            <Field label="Titel"><input className={inputCls} value={neuesEventForm.titel} onChange={(e) => setNeuesEventForm({ ...neuesEventForm, titel: e.target.value })} placeholder="z. B. Sommerfest im Padelhouse" /></Field>
+            <Field label="Datum"><input className={inputCls} type="date" value={neuesEventForm.datum} onChange={(e) => setNeuesEventForm({ ...neuesEventForm, datum: e.target.value })} /></Field>
+            <Field label="Beschreibung"><input className={inputCls} value={neuesEventForm.beschreibung} onChange={(e) => setNeuesEventForm({ ...neuesEventForm, beschreibung: e.target.value })} placeholder="kurze Beschreibung" /></Field>
+            <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold uppercase tracking-wide">Anlegen & alle benachrichtigen</button>
+          </form>
+        </Modal>
       )}
 
       {tab === "privatevent" && (
@@ -2143,6 +2202,7 @@ function FanshopView({ produkte, onSaveProdukte, role, vormerkungen, onSave }) {
     const text = `Fanshop-Vormerkung: ${target.name}\nName: ${form.name}\nE-Mail: ${form.email}\nAdresse: ${form.adresse}${form.groesse ? `\nGröße: ${form.groesse}` : ""}\nZahlungsart: ${form.zahlung === "bar" ? "Barzahlung vor Ort" : "Überweisung"}`;
     setMailLink(mailtoLink(`Fanshop-Vormerkung: ${target.name}`, text));
     setWaLink(whatsappLink(text));
+    pushAdminEmailSenden(`Neue Fanshop-Bestellung: ${target.name}`, text);
     setStep("done");
   }
   function resetProduktForm() {
@@ -2265,6 +2325,12 @@ function ChatView({ threads, onSave, chatStatus, onStatus, profile, role }) {
   const [text, setText] = useState("");
   const [renameInput, setRenameInput] = useState("");
   const active = threads.find((t) => t.id === activeId);
+  const bottomRef = useRef(null);
+  const meineKennung = profile.profilname || profile.name || (role === "admin" ? "Admin" : "Ich");
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ block: "end" });
+  }, [active?.id, active?.messages?.length]);
 
   function statusOf(id) {
     return chatStatus[id] || { muted: false, readCount: 0 };
@@ -2282,13 +2348,19 @@ function ChatView({ threads, onSave, chatStatus, onStatus, profile, role }) {
   function send(e) {
     e.preventDefault();
     if (!text.trim()) return;
-    const sender = profile.profilname || profile.name || (role === "admin" ? "Admin" : "Ich");
+    const sender = meineKennung;
     const nextThreads = threads.map((t) => t.id === activeId ? { ...t, messages: [...t.messages, { from: sender, text, zeit: new Date().toTimeString().slice(0, 5) }] } : t);
     onSave(nextThreads);
     const updated = nextThreads.find((t) => t.id === activeId);
     onStatus({ ...chatStatus, [activeId]: { ...statusOf(activeId), readCount: updated.messages.length } });
     if (updated.type === "offen") {
       pushBenachrichtigungSenden(sender + " im Hallen-Chat", text, "/?view=chat");
+    }
+    if (updated.type === "1:1" && role !== "admin") {
+      pushAdminEmailSenden(
+        "Neue Nachricht im Admin-Support-Chat",
+        `${sender} schreibt:\n\n${text}`
+      );
     }
     setText("");
   }
@@ -2314,25 +2386,32 @@ function ChatView({ threads, onSave, chatStatus, onStatus, profile, role }) {
             </div>
           </div>
         )}
-        <div className="space-y-2 mb-4 max-h-96 overflow-y-auto">
-          {active.messages.map((m, i) => (
-            <div key={i} className="bg-zinc-900 border border-zinc-800 rounded-lg p-3">
-              <div className="flex justify-between text-xs text-zinc-500 mb-1">
-                <span className="text-emerald-400 font-bold">{m.from}</span>
-                <span className="flex items-center gap-2">
-                  {m.zeit}
-                  {role === "admin" && (
-                    <button onClick={() => onSave(threads.map((t) => t.id === active.id ? { ...t, messages: t.messages.filter((_, idx) => idx !== i) } : t))} className="text-zinc-500 uppercase tracking-wide">Löschen</button>
-                  )}
-                </span>
+        <div className="space-y-1.5 mb-4 max-h-[26rem] overflow-y-auto px-1 py-2 rounded-lg" style={{ background: "#0b141a" }}>
+          {active.messages.length === 0 && <p className="text-zinc-500 text-xs text-center py-6">Noch keine Nachrichten.</p>}
+          {active.messages.map((m, i) => {
+            const eigene = m.from === meineKennung;
+            return (
+              <div key={i} className={"flex " + (eigene ? "justify-end" : "justify-start")}>
+                <div className={"max-w-[78%] rounded-2xl px-3 py-1.5 shadow " + (eigene ? "bg-emerald-700 rounded-br-sm" : "bg-zinc-700 rounded-bl-sm")}>
+                  {!eigene && active.type !== "1:1" && <div className="text-emerald-300 text-xs font-bold">{m.from}</div>}
+                  <div className="text-white text-sm whitespace-pre-wrap break-words">{m.text}</div>
+                  <div className="flex items-center justify-end gap-2 mt-0.5">
+                    <span className="text-[10px] text-white/60">{m.zeit}</span>
+                    {role === "admin" && (
+                      <button onClick={() => onSave(threads.map((t) => t.id === active.id ? { ...t, messages: t.messages.filter((_, idx) => idx !== i) } : t))} className="text-[10px] text-white/50 uppercase">✕</button>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div className="text-zinc-200 text-sm">{m.text}</div>
-            </div>
-          ))}
+            );
+          })}
+          <div ref={bottomRef} />
         </div>
         <form onSubmit={send} className="flex gap-2">
-          <input className={inputCls} placeholder="Nachricht schreiben..." value={text} onChange={(e) => setText(e.target.value)} />
-          <button type="submit" className="px-4 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold">Senden</button>
+          <input className={inputCls + " rounded-full"} placeholder="Nachricht schreiben..." value={text} onChange={(e) => setText(e.target.value)} />
+          <button type="submit" className="w-10 h-10 rounded-full bg-emerald-500 text-zinc-950 flex items-center justify-center shrink-0" aria-label="Senden">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20l18-8L3 4v6l12 2-12 2v6Z" /></svg>
+          </button>
         </form>
       </div>
     );
@@ -2353,7 +2432,7 @@ function ChatView({ threads, onSave, chatStatus, onStatus, profile, role }) {
                 )}
               </div>
               <div className="text-zinc-500 text-xs mt-1">{t.type === "1:1" ? "Direktnachricht" : t.type === "gruppe" ? "Gruppe" : "Offener Chat"}{st.muted ? " · stummgeschaltet" : ""}</div>
-              {t.messages.length > 0 && <div className="text-zinc-400 text-xs mt-1 truncate">{t.messages[t.messages.length - 1].text}</div>}
+              {t.messages.length > 0 && <div className="text-zinc-400 text-xs mt-1 truncate">{t.messages[t.messages.length - 1].from}: {t.messages[t.messages.length - 1].text}</div>}
             </button>
             <button onClick={(e) => toggleMute(t.id, e)} aria-label="Stummschalten"
               className={"absolute top-2 right-2 w-8 h-8 flex items-center justify-center text-lg " + (st.muted ? "text-zinc-600" : "text-emerald-400")}>
