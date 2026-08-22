@@ -494,7 +494,6 @@ export default function PadelhouseApp() {
   const unreadBenachrichtigungen = benachrichtigungenGelesenBis
     ? benachrichtigungen.filter((n) => n.created_at > benachrichtigungenGelesenBis).length
     : benachrichtigungen.length;
-  const ligaFreigeschaltet = (profile.ligaTeilnahme && !!profile.ligaId) || role === "admin";
 
   const visibleTiles = useMemo(() => {
     const base = tileOrder.filter((k) => TILES_DEFAULT.includes(k));
@@ -557,23 +556,15 @@ export default function PadelhouseApp() {
           <div className="bg-zinc-900 rounded-2xl p-3 mb-3">
             <div className="flex items-center justify-between gap-2">
               <GlockeButton badge={unreadBenachrichtigungen} onClick={() => setView("benachrichtigungen")} />
-              <div className="flex items-center gap-2 flex-1 justify-center min-w-0">
-                <button onClick={handleLogoTap} className="w-8 h-8 rounded-full bg-black border-2 border-white flex items-center justify-center shrink-0 overflow-hidden" aria-label="Padelhouse Logo">
-                  <img src={LOGO_DATA_URI} alt="Padelhouse Hallertau Logo" className="w-full h-full object-cover" />
-                </button>
-                <div className="text-white font-black uppercase tracking-wide text-xs leading-tight truncate">Padelhouse Hallertau</div>
-              </div>
+              <button onClick={handleLogoTap} className="w-16 h-16 rounded-full bg-black border-2 border-white flex items-center justify-center shrink-0 overflow-hidden" aria-label="Padelhouse Hallertau Logo">
+                <img src={LOGO_DATA_URI} alt="Padelhouse Hallertau Logo" className="w-full h-full object-cover" />
+              </button>
               <button onClick={() => setView("profil")} className="w-7 h-7 rounded-full bg-black border border-zinc-700 flex items-center justify-center text-emerald-400 font-black text-xs shrink-0" aria-label="Profil">
                 {profile.name ? initialen(profile.name) : (
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="4" /><path d="M4 20c1.5-4 6-5 8-5s6.5 1 8 5" /></svg>
                 )}
               </button>
             </div>
-            <a href={PLAYTOMIC_URL} target="_blank" rel="noopener noreferrer"
-              className="mt-2 flex items-center justify-center gap-1.5 py-1.5 rounded-full bg-emerald-500 text-zinc-950 text-xs font-bold uppercase tracking-wide">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M9 3v4M15 3v4M4 10h16" /></svg>
-              Platz buchen (Playtomic)
-            </a>
             {role === "admin" && (
               <div className="flex justify-center mt-2">
                 <span className="px-3 py-0.5 rounded-full text-xs font-bold bg-emerald-500 text-zinc-950">Admin</span>
@@ -605,6 +596,13 @@ export default function PadelhouseApp() {
               />
             ))}
           </div>
+
+          <a href={PLAYTOMIC_URL} target="_blank" rel="noopener noreferrer"
+            className="mt-4 flex items-center justify-center gap-2 py-4 rounded-2xl text-white font-black uppercase tracking-wide text-base shadow-lg active:opacity-90"
+            style={{ background: "linear-gradient(135deg, #001C5A 0%, #6BBAEF 100%)", border: "2px solid #D6964A" }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M9 3v4M15 3v4M4 10h16" /></svg>
+            Platz buchen (Playtomic)
+          </a>
         </div>
       )}
 
@@ -626,14 +624,14 @@ export default function PadelhouseApp() {
       )}
 
       {view === "profil" && (
-        <ProfilView profile={profile} onSave={persistProfile} role={role} onAdminLogout={adminAbmelden} ligen={ligen} onCreateTeam={createTeamInLiga} />
+        <ProfilView profile={profile} onSave={persistProfile} role={role} onAdminLogout={adminAbmelden} />
       )}
 
       {view === "liga" && (
         <LigaView
           loading={loading} spiele={spiele} persistSpiele={persistSpiele}
           ligen={ligen} persistLigen={persistLigen} role={role} profile={profile}
-          freigeschaltet={ligaFreigeschaltet} goProfil={() => setView("profil")}
+          onCreateTeam={createTeamInLiga} onSaveProfile={persistProfile}
         />
       )}
 
@@ -693,11 +691,9 @@ export default function PadelhouseApp() {
   );
 }
 
-function ProfilView({ profile, onSave, role, onAdminLogout, ligen, onCreateTeam }) {
+function ProfilView({ profile, onSave, role, onAdminLogout }) {
   const [form, setForm] = useState(profile);
   const [saved, setSaved] = useState(false);
-  const [ligaError, setLigaError] = useState("");
-  const [teamModus, setTeamModus] = useState("neu");
   const [pushStatus, setPushStatus] = useState("default");
   const [pushLaden, setPushLaden] = useState(false);
   const [pushFehler, setPushFehler] = useState("");
@@ -720,45 +716,9 @@ function ProfilView({ profile, onSave, role, onAdminLogout, ligen, onCreateTeam 
     setPushLaden(false);
   }
 
-  const registriert = !!profile.ligaRegistriert;
-  const registrierteLiga = registriert ? ligen.find((l) => l.id === profile.ligaId) : null;
-  const heute = new Date().toISOString().slice(0, 10);
-  function istGesperrt(l) { return !!l.gesperrt || !!(l.anmeldefrist && heute > l.anmeldefrist); }
-  const alleLigenGesperrt = ligen.length === 0 || ligen.every(istGesperrt);
-  const gewaehlteLigaObj = ligen.find((l) => l.id === form.ligaId);
-  const bestehendeTeams = gewaehlteLigaObj?.teams || [];
-
   function submit(e) {
     e.preventDefault();
-    if (form.ligaTeilnahme && !registriert) {
-      if (!form.ligaId) return setLigaError("Bitte eine Liga auswählen.");
-      const gewaehlteLiga = ligen.find((l) => l.id === form.ligaId);
-      if (gewaehlteLiga?.gesperrt) {
-        return setLigaError(`Die Anmeldung für ${gewaehlteLiga.name} wurde vom Betreiber gesperrt.`);
-      }
-      if (gewaehlteLiga?.anmeldefrist && heute > gewaehlteLiga.anmeldefrist) {
-        return setLigaError(`Die Anmeldefrist für ${gewaehlteLiga.name} ist am ${gewaehlteLiga.anmeldefrist} abgelaufen.`);
-      }
-      if (teamModus === "neu") {
-        if (!form.teamName || !form.teamName.trim()) return setLigaError("Bitte einen Teamnamen eingeben.");
-        if (bestehendeTeams.some((t) => t.name.toLowerCase() === form.teamName.trim().toLowerCase())) {
-          return setLigaError("Dieser Teamname existiert in dieser Liga schon. Wähle stattdessen \"Bestehendem Team beitreten\".");
-        }
-        setLigaError("");
-        onCreateTeam(form.ligaId, form.teamName.trim());
-        onSave({ ...form, teamName: form.teamName.trim(), ligaRegistriert: true });
-        if (pushStatus === "granted") pushTeamAktualisieren(form.teamName.trim());
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2000);
-        return;
-      } else {
-        if (!form.teamName) return setLigaError("Bitte ein Team auswählen.");
-        if (pushStatus === "granted") pushTeamAktualisieren(form.teamName);
-      }
-    }
-    setLigaError("");
-    const toSave = form.ligaTeilnahme && !registriert ? { ...form, ligaRegistriert: true } : form;
-    onSave(toSave);
+    onSave(form);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }
@@ -787,70 +747,10 @@ function ProfilView({ profile, onSave, role, onAdminLogout, ligen, onCreateTeam 
             {pushLaden ? "Einen Moment..." : pushStatus === "granted" ? "Benachrichtigungen deaktivieren" : "Benachrichtigungen aktivieren"}
           </button>
           {pushFehler && <p className="text-red-400 text-xs mt-2">{pushFehler}</p>}
+          <p className="text-zinc-600 text-xs mt-3 leading-relaxed">
+            Hinweis: Auf dem iPhone funktioniert das nur mit <strong>Safari</strong>, auf Android mit <strong>Chrome</strong>. Außerdem muss die Seite vorher über „Zum Home-Bildschirm hinzufügen" auf dem Home-Bildschirm gespeichert und darüber geöffnet werden – direkt im Browser funktioniert es nicht zuverlässig.
+          </p>
         </div>
-
-        {registriert ? (
-          <div className="bg-zinc-900 border border-emerald-700 rounded-lg p-4">
-            <div className="text-emerald-500 text-xs uppercase tracking-wide font-bold mb-1">Liga-Anmeldung</div>
-            <div className="text-white font-bold">{profile.teamName}</div>
-            <div className="text-zinc-400 text-sm">{registrierteLiga?.name || "Liga"}</div>
-            <p className="text-zinc-500 text-xs mt-2">Als Spielführer festgelegt. Eine nachträgliche Änderung ist nicht möglich – bei Fragen wende dich an den Betreiber.</p>
-          </div>
-        ) : (
-          <>
-            <label className={"flex items-center gap-2 text-sm " + (alleLigenGesperrt ? "text-zinc-600" : "text-zinc-300")}>
-              <input type="checkbox" checked={form.ligaTeilnahme} disabled={alleLigenGesperrt}
-                onChange={(e) => { setLigaError(""); setForm({ ...form, ligaTeilnahme: e.target.checked, ligaId: e.target.checked ? (form.ligaId || ligen.find((l) => !istGesperrt(l))?.id || null) : form.ligaId, teamName: "" }); }} />
-              Am Ligabetrieb teilnehmen
-            </label>
-            {alleLigenGesperrt && (
-              <p className="text-zinc-500 text-xs">Die Anmeldung ist aktuell für alle Ligen gesperrt oder die Anmeldefrist ist abgelaufen.</p>
-            )}
-            {form.ligaTeilnahme && !alleLigenGesperrt && (
-              <>
-                <p className="text-zinc-500 text-xs">Diese Anmeldung ist einmalig und kann danach nicht mehr geändert werden.</p>
-                <Field label="Meine Liga">
-                  <select className={inputCls} value={form.ligaId || ""} onChange={(e) => setForm({ ...form, ligaId: e.target.value, teamName: "" })}>
-                    {ligen.map((l) => (
-                      <option key={l.id} value={l.id} disabled={istGesperrt(l)}>
-                        {l.name}{l.gesperrt ? " (Anmeldung gesperrt)" : l.anmeldefrist && heute > l.anmeldefrist ? " (Frist abgelaufen)" : l.anmeldefrist ? ` (Anmeldung bis ${l.anmeldefrist})` : ""}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-                {gewaehlteLigaObj?.teilnahmegebuehr && (
-                  <p className="text-emerald-400 text-xs">Einmalige Teilnahmegebühr: {gewaehlteLigaObj.teilnahmegebuehr}</p>
-                )}
-
-                <div className="flex gap-2">
-                  <button type="button" onClick={() => { setTeamModus("neu"); setForm({ ...form, teamName: "" }); setLigaError(""); }}
-                    className={"flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wide " + (teamModus === "neu" ? "bg-emerald-500 text-zinc-950" : "bg-zinc-800 text-zinc-400")}>
-                    Neues Team anlegen
-                  </button>
-                  <button type="button" onClick={() => { setTeamModus("beitreten"); setForm({ ...form, teamName: bestehendeTeams[0]?.name || "" }); setLigaError(""); }}
-                    className={"flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wide " + (teamModus === "beitreten" ? "bg-emerald-500 text-zinc-950" : "bg-zinc-800 text-zinc-400")}>
-                    Team beitreten
-                  </button>
-                </div>
-
-                {teamModus === "neu" ? (
-                  <Field label="Teamname (du wirst Spielführer)">
-                    <input className={inputCls} value={form.teamName || ""} onChange={(e) => setForm({ ...form, teamName: e.target.value })} placeholder="z. B. Netzhüter" />
-                  </Field>
-                ) : bestehendeTeams.length === 0 ? (
-                  <p className="text-zinc-500 text-xs">Für diese Liga gibt es noch kein Team zum Beitreten. Lege stattdessen ein neues Team an.</p>
-                ) : (
-                  <Field label="Team auswählen">
-                    <select className={inputCls} value={form.teamName || ""} onChange={(e) => setForm({ ...form, teamName: e.target.value })}>
-                      {bestehendeTeams.map((t) => <option key={t.id} value={t.name}>{t.name}</option>)}
-                    </select>
-                  </Field>
-                )}
-                {ligaError && <p className="text-red-400 text-xs">{ligaError}</p>}
-              </>
-            )}
-          </>
-        )}
 
         <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-zinc-950 font-bold uppercase tracking-wide text-sm">
           Speichern
@@ -866,7 +766,98 @@ function ProfilView({ profile, onSave, role, onAdminLogout, ligen, onCreateTeam 
   );
 }
 
-function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, profile, freigeschaltet, goProfil }) {
+function LigaAnmeldungForm({ ligen, profile, onCreateTeam, onSaveProfile }) {
+  const [ligaId, setLigaId] = useState(ligen.find((l) => !l.gesperrt)?.id || ligen[0]?.id || "");
+  const [teamModus, setTeamModus] = useState("neu");
+  const [teamName, setTeamName] = useState("");
+  const [error, setError] = useState("");
+
+  const heute = new Date().toISOString().slice(0, 10);
+  function istGesperrt(l) { return !!l.gesperrt || !!(l.anmeldefrist && heute > l.anmeldefrist); }
+  const alleLigenGesperrt = ligen.length === 0 || ligen.every(istGesperrt);
+  const gewaehlteLigaObj = ligen.find((l) => l.id === ligaId);
+  const bestehendeTeams = gewaehlteLigaObj?.teams || [];
+
+  function submit(e) {
+    e.preventDefault();
+    if (!ligaId) return setError("Bitte eine Liga auswählen.");
+    const gewaehlteLiga = ligen.find((l) => l.id === ligaId);
+    if (gewaehlteLiga?.gesperrt) return setError(`Die Anmeldung für ${gewaehlteLiga.name} wurde vom Betreiber gesperrt.`);
+    if (gewaehlteLiga?.anmeldefrist && heute > gewaehlteLiga.anmeldefrist) return setError(`Die Anmeldefrist für ${gewaehlteLiga.name} ist am ${gewaehlteLiga.anmeldefrist} abgelaufen.`);
+    if (teamModus === "neu") {
+      if (!teamName.trim()) return setError("Bitte einen Teamnamen eingeben.");
+      if (bestehendeTeams.some((t) => t.name.toLowerCase() === teamName.trim().toLowerCase())) {
+        return setError("Dieser Teamname existiert in dieser Liga schon. Wähle stattdessen \"Team beitreten\".");
+      }
+      setError("");
+      onCreateTeam(ligaId, teamName.trim());
+      onSaveProfile({ ...profile, ligaId, teamName: teamName.trim(), ligaTeilnahme: true, ligaRegistriert: true });
+      pushTeamAktualisieren(teamName.trim());
+    } else {
+      if (!teamName) return setError("Bitte ein Team auswählen.");
+      setError("");
+      onSaveProfile({ ...profile, ligaId, teamName, ligaTeilnahme: true, ligaRegistriert: true });
+      pushTeamAktualisieren(teamName);
+    }
+  }
+
+  if (alleLigenGesperrt) {
+    return (
+      <div className="text-center py-10">
+        <div className="text-white font-black uppercase tracking-wide mb-2">Liga-Anmeldung</div>
+        <p className="text-zinc-400 text-sm">Die Anmeldung ist aktuell für alle Ligen gesperrt oder die Anmeldefrist ist abgelaufen.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="text-white font-black uppercase tracking-wide mb-1">Liga-Anmeldung</div>
+      <p className="text-zinc-500 text-xs mb-4">Diese Anmeldung ist einmalig und kann danach nicht mehr selbst geändert werden.</p>
+      <form onSubmit={submit} className="space-y-3">
+        <Field label="Liga">
+          <select className={inputCls} value={ligaId} onChange={(e) => { setLigaId(e.target.value); setTeamName(""); }}>
+            {ligen.map((l) => (
+              <option key={l.id} value={l.id} disabled={istGesperrt(l)}>
+                {l.name}{l.gesperrt ? " (Anmeldung gesperrt)" : l.anmeldefrist && heute > l.anmeldefrist ? " (Frist abgelaufen)" : l.anmeldefrist ? ` (Anmeldung bis ${l.anmeldefrist})` : ""}
+              </option>
+            ))}
+          </select>
+        </Field>
+        {gewaehlteLigaObj?.teilnahmegebuehr && (
+          <p className="text-emerald-400 text-xs">Einmalige Teilnahmegebühr: {gewaehlteLigaObj.teilnahmegebuehr}</p>
+        )}
+        <div className="flex gap-2">
+          <button type="button" onClick={() => { setTeamModus("neu"); setTeamName(""); setError(""); }}
+            className={"flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wide " + (teamModus === "neu" ? "bg-emerald-500 text-zinc-950" : "bg-zinc-800 text-zinc-400")}>
+            Neues Team anlegen
+          </button>
+          <button type="button" onClick={() => { setTeamModus("beitreten"); setTeamName(bestehendeTeams[0]?.name || ""); setError(""); }}
+            className={"flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wide " + (teamModus === "beitreten" ? "bg-emerald-500 text-zinc-950" : "bg-zinc-800 text-zinc-400")}>
+            Team beitreten
+          </button>
+        </div>
+        {teamModus === "neu" ? (
+          <Field label="Teamname (du wirst Spielführer)">
+            <input className={inputCls} value={teamName} onChange={(e) => setTeamName(e.target.value)} placeholder="z. B. Netzhüter" />
+          </Field>
+        ) : bestehendeTeams.length === 0 ? (
+          <p className="text-zinc-500 text-xs">Für diese Liga gibt es noch kein Team zum Beitreten. Lege stattdessen ein neues Team an.</p>
+        ) : (
+          <Field label="Team auswählen">
+            <select className={inputCls} value={teamName} onChange={(e) => setTeamName(e.target.value)}>
+              {bestehendeTeams.map((t) => <option key={t.id} value={t.name}>{t.name}</option>)}
+            </select>
+          </Field>
+        )}
+        {error && <p className="text-red-400 text-xs">{error}</p>}
+        <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-zinc-950 font-bold uppercase tracking-wide text-sm">Anmelden</button>
+      </form>
+    </div>
+  );
+}
+
+function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, profile, onCreateTeam, onSaveProfile }) {
   const [tab, setTab] = useState("tabelle");
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState(null);
@@ -908,28 +899,8 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
     if (role !== "admin" && profile.teamName) setTeamFilter(profile.teamName);
   }, [profile.teamName, role]);
 
-  if (!freigeschaltet) {
-    return (
-      <div className="text-center py-10">
-        <div className="text-white font-black uppercase tracking-wide mb-2">Nur für Liga-Teams</div>
-        <p className="text-zinc-400 text-sm mb-5">Aktiviere „Am Ligabetrieb teilnehmen" in deinem Profil, um Tabelle und Spielplan zu sehen.</p>
-        <button onClick={goProfil} className="px-5 py-2 rounded-lg bg-emerald-500 text-zinc-950 font-bold uppercase tracking-wide text-sm">
-          Zum Profil
-        </button>
-      </div>
-    );
-  }
-
-  if (role !== "admin" && !activeLigaId) {
-    return (
-      <div className="text-center py-10">
-        <div className="text-white font-black uppercase tracking-wide mb-2">Keine Liga gewählt</div>
-        <p className="text-zinc-400 text-sm mb-5">Wähle im Profil aus, welcher Liga du beitreten möchtest.</p>
-        <button onClick={goProfil} className="px-5 py-2 rounded-lg bg-emerald-500 text-zinc-950 font-bold uppercase tracking-wide text-sm">
-          Zum Profil
-        </button>
-      </div>
-    );
+  if (role !== "admin" && !profile.ligaRegistriert) {
+    return <LigaAnmeldungForm ligen={ligen} profile={profile} onCreateTeam={onCreateTeam} onSaveProfile={onSaveProfile} />;
   }
 
   if (!activeLiga) {
@@ -2350,7 +2321,7 @@ const FAQ_DATEN = [
   {
     kategorie: "Liga",
     fragen: [
-      { f: "Wie melde ich mein Team für die Liga an?", a: "Im Profil den Punkt \"Am Ligabetrieb teilnehmen\" aktivieren, Liga auswählen und dann entweder \"Neues Team anlegen\" (du wirst Spielführer und gibst einen Teamnamen ein) oder \"Team beitreten\" (dein Partner wählt das vom Spielführer bereits angelegte Team aus einer Liste). Achtung: Diese Anmeldung ist einmalig und kann danach nicht mehr selbst geändert werden." },
+      { f: "Wie melde ich mein Team für die Liga an?", a: "Tippe einfach auf die Kachel \"Liga\" – dort öffnet sich direkt das Anmeldeformular, solange du noch nicht registriert bist. Wähle deine Liga aus und entweder \"Neues Team anlegen\" (du wirst Spielführer und gibst einen Teamnamen ein) oder \"Team beitreten\" (dein Partner wählt das vom Spielführer bereits angelegte Team aus einer Liste). Achtung: Diese Anmeldung ist einmalig und kann danach nicht mehr selbst geändert werden." },
       { f: "Was mache ich, wenn die Anmeldefrist abgelaufen ist?", a: "Ist die vom Betreiber gesetzte Anmeldefrist einer Liga vorbei, ist keine Neuanmeldung mehr möglich. Wende dich in dem Fall direkt an den Betreiber." },
       { f: "Wie trage ich ein Spielergebnis ein?", a: "In der Liga-Kachel unter \"Spielplan\" bei der jeweiligen Begegnung auf \"Bearbeiten\" tippen und das Ergebnis eintragen." },
       { f: "Wie funktionieren Terminvorschläge?", a: "Ist noch kein Termin für ein Spiel bestätigt, kann das Heimteam Terminvorschläge (Datum & Uhrzeit) einreichen. Das Gegnerteam sieht diese und kann einen Vorschlag mit \"Annehmen\" bestätigen." },
