@@ -987,6 +987,19 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
     persistLigen(next);
     setTeamNameInput("");
   }
+  function removeTeam(teamId) {
+    const t = teams.find((x) => x.id === teamId);
+    if (!t) return;
+    const betroffeneSpiele = spiele.filter((sp) => sp.ligaId === activeLigaId && (sp.heimId === teamId || sp.gastId === teamId));
+    const hinweis = betroffeneSpiele.length > 0
+      ? `"${t.name}" löschen? Dieses Team hat bereits ${betroffeneSpiele.length} Begegnung(en) im Spielplan – diese werden dabei ebenfalls gelöscht. Das kann nicht rückgängig gemacht werden.`
+      : `"${t.name}" wirklich löschen?`;
+    if (!window.confirm(hinweis)) return;
+    persistLigen(ligen.map((l) => l.id === activeLigaId ? { ...l, teams: l.teams.filter((x) => x.id !== teamId) } : l));
+    if (betroffeneSpiele.length > 0) {
+      persistSpiele(spiele.filter((sp) => !(sp.ligaId === activeLigaId && (sp.heimId === teamId || sp.gastId === teamId))));
+    }
+  }
   function saveFrist() {
     const next = ligen.map((l) => l.id === activeLigaId ? { ...l, anmeldefrist: fristInput || null } : l);
     persistLigen(next);
@@ -1171,6 +1184,17 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
               <input className={inputCls} placeholder="Neues Team hinzufügen" value={teamNameInput} onChange={(e) => setTeamNameInput(e.target.value)} />
               <button type="submit" className="px-4 rounded-lg bg-zinc-800 text-emerald-400 text-sm font-bold">+</button>
             </form>
+          )}
+          {role === "admin" && teams.length > 0 && (
+            <div className="mt-4 space-y-1.5">
+              <div className="text-xs text-zinc-500 uppercase tracking-wide font-bold mb-1">Teams verwalten</div>
+              {teams.map((t) => (
+                <div key={t.id} className="flex items-center justify-between bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2">
+                  <span className="text-white text-sm">{t.name}</span>
+                  <button onClick={() => removeTeam(t.id)} className="text-red-400 text-xs uppercase tracking-wide font-bold">Löschen</button>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       )}
@@ -1523,7 +1547,6 @@ function CommunityView({ news, gruppen, role, profile, onNews, onGruppen, onMark
                     <span className="bg-emerald-500 text-zinc-950 text-xs font-black rounded-full w-5 h-5 flex items-center justify-center">{unread}</span>
                   )}
                   <button onClick={() => hideGruppe(g.id)} className="text-zinc-500 text-xs uppercase tracking-wide">Entfernen</button>
-                  <button onClick={() => openGruppe(g.id)} className="w-10 h-10 rounded-full border-2 border-emerald-500 flex items-center justify-center text-emerald-400 font-black shrink-0">{g.name.charAt(0)}</button>
                 </div>
               </div>
             </div>
