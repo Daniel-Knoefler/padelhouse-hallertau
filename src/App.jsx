@@ -882,6 +882,9 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
   const [form, setForm] = useState({ spieltag: "", heimId: "", gastId: "", datum: "", ergebnis: "", bestaetigt: false });
   const [fristInput, setFristInput] = useState("");
   const [gebuehrInput, setGebuehrInput] = useState("");
+  const [zeitraumInput, setZeitraumInput] = useState("");
+  const [infoTextInput, setInfoTextInput] = useState("");
+  const [showInfoModal, setShowInfoModal] = useState(false);
   const [teamFilter, setTeamFilter] = useState("alle");
   const [spieltagFilter, setSpieltagFilter] = useState("alle");
   const [vorschlagForms, setVorschlagForms] = useState({});
@@ -898,7 +901,7 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
   }, [ligaSpiele]);
 
   useEffect(() => {
-    if (activeLiga) { setFristInput(activeLiga.anmeldefrist || ""); setGebuehrInput(activeLiga.teilnahmegebuehr || ""); }
+    if (activeLiga) { setFristInput(activeLiga.anmeldefrist || ""); setGebuehrInput(activeLiga.teilnahmegebuehr || ""); setZeitraumInput(activeLiga.zeitraum || ""); setInfoTextInput(activeLiga.infoText || ""); }
   }, [activeLigaId]);
 
   useEffect(() => {
@@ -952,8 +955,19 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
     if (form.heimId === form.gastId) return setError("Heimteam und Gegner müssen unterschiedlich sein.");
     if (!form.datum) return setError("Bitte ein Datum wählen.");
     setError("");
+    const alteSp = editId ? spiele.find((sp) => sp.id === editId) : null;
+    const neuesUnbestaetigtesErgebnis = form.ergebnis && form.ergebnis.trim() && !form.bestaetigt &&
+      (!alteSp || alteSp.ergebnis !== form.ergebnis || alteSp.bestaetigt !== form.bestaetigt);
     if (editId) persistSpiele(spiele.map((sp) => (sp.id === editId ? { ...sp, ...form, terminBestaetigt: true } : sp)));
     else persistSpiele([...spiele, { id: "sp-" + Date.now(), ligaId: activeLigaId, vorschlaege: [], terminBestaetigt: true, ...form }]);
+    if (neuesUnbestaetigtesErgebnis) {
+      pushBenachrichtigungSenden(
+        "Ergebnis eingetragen",
+        `${teamName(form.heimId)} vs ${teamName(form.gastId)}: ${form.ergebnis} – bitte bestätigen`,
+        "/?view=liga",
+        teamName(form.gastId)
+      );
+    }
     setShowForm(false); reset();
   }
   function teamName(id) { return teams.find((t) => t.id === id)?.name || "?"; }
@@ -984,6 +998,22 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
   function saveGebuehr() {
     const next = ligen.map((l) => l.id === activeLigaId ? { ...l, teilnahmegebuehr: gebuehrInput } : l);
     persistLigen(next);
+  }
+  function saveZeitraum() {
+    const next = ligen.map((l) => l.id === activeLigaId ? { ...l, zeitraum: zeitraumInput } : l);
+    persistLigen(next);
+  }
+  function saveInfoText() {
+    const next = ligen.map((l) => l.id === activeLigaId ? { ...l, infoText: infoTextInput } : l);
+    persistLigen(next);
+    setShowInfoModal(false);
+  }
+  function bestaetigeErgebnis(spId) {
+    persistSpiele(spiele.map((sp) => sp.id === spId ? { ...sp, bestaetigt: true } : sp));
+  }
+  function loescheSpiel(sp) {
+    if (!window.confirm(`Begegnung "${teamName(sp.heimId)} vs ${teamName(sp.gastId)}" (Spieltag ${sp.spieltag}) wirklich löschen? Das kann nicht rückgängig gemacht werden.`)) return;
+    persistSpiele(spiele.filter((s) => s.id !== sp.id));
   }
   function toggleGesperrt() {
     const next = ligen.map((l) => l.id === activeLigaId ? { ...l, gesperrt: !l.gesperrt } : l);
@@ -1108,6 +1138,11 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
             <input className={inputCls} value={gebuehrInput} onChange={(e) => setGebuehrInput(e.target.value)} placeholder="z. B. 50 € pro Team" />
             <button onClick={saveGebuehr} className="px-4 rounded-lg bg-zinc-800 text-emerald-400 text-sm font-bold whitespace-nowrap">Speichern</button>
           </div>
+          <div className="flex gap-2 items-center">
+            <span className="text-zinc-500 text-xs whitespace-nowrap">Zeitraum:</span>
+            <input className={inputCls} value={zeitraumInput} onChange={(e) => setZeitraumInput(e.target.value)} placeholder="z. B. Saison Oktober – Februar" />
+            <button onClick={saveZeitraum} className="px-4 rounded-lg bg-zinc-800 text-emerald-400 text-sm font-bold whitespace-nowrap">Speichern</button>
+          </div>
           <button onClick={toggleGesperrt}
             className={"w-full py-2 rounded-lg text-sm font-bold uppercase tracking-wide " + (activeLiga?.gesperrt ? "bg-red-900 text-red-200" : "bg-zinc-800 text-emerald-400")}>
             {activeLiga?.gesperrt ? "Anmeldung gesperrt – Freigeben" : "Anmeldung für alle Nutzer sperren"}
@@ -1122,8 +1157,26 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
         </div>
       )}
 
-      <SubTabs tabs={[{ value: "tabelle", label: "Tabelle" }, { value: "spielplan", label: "Spielplan" }]} active={tab} onChange={setTab} />
-      <div className="text-zinc-500 text-xs mb-4">Saison Oktober – Februar · Tabellenerster nach Saisonende ist Meister (Hin- und Rückspiel)</div>
+      <div className="flex items-center gap-2 mb-4">
+        <div className="flex-1"><SubTabs tabs={[{ value: "tabelle", label: "Tabelle" }, { value: "spielplan", label: "Spielplan" }]} active={tab} onChange={setTab} /></div>
+        <button onClick={() => setShowInfoModal(true)} className="w-8 h-8 rounded-full bg-zinc-800 text-emerald-400 flex items-center justify-center shrink-0" aria-label="Info & Regeln">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9" /><path d="M12 16v-5M12 8h.01" /></svg>
+        </button>
+      </div>
+      <div className="text-zinc-500 text-xs mb-4">{activeLiga?.zeitraum || "Zeitraum noch nicht festgelegt"} · Tabellenerster nach Saisonende ist Meister (Hin- und Rückspiel)</div>
+
+      {showInfoModal && (
+        <Modal title="Info & Regeln" onClose={() => setShowInfoModal(false)}>
+          {role === "admin" ? (
+            <div className="space-y-3">
+              <textarea className={inputCls + " min-h-[160px]"} value={infoTextInput} onChange={(e) => setInfoTextInput(e.target.value)} placeholder="z. B. Spielregeln, Ansprechpartner, besondere Hinweise zur Liga..." />
+              <button onClick={saveInfoText} className="w-full py-2 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold uppercase tracking-wide">Speichern</button>
+            </div>
+          ) : (
+            <p className="text-zinc-300 text-sm whitespace-pre-wrap">{activeLiga?.infoText || "Noch keine Informationen hinterlegt."}</p>
+          )}
+        </Modal>
+      )}
 
       {tab === "tabelle" && (
         <div className="overflow-x-auto">
@@ -1274,9 +1327,15 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
                         </div>
                       )}
 
+                      {sp.ergebnis && !sp.bestaetigt && kannAnnehmen && (
+                        <button onClick={() => bestaetigeErgebnis(sp.id)} className="w-full mt-3 py-2 rounded-lg bg-emerald-500 text-zinc-950 text-xs font-bold uppercase tracking-wide">
+                          Ergebnis bestätigen ({sp.ergebnis})
+                        </button>
+                      )}
+
                       <div className="flex gap-3 mt-3">
-                        <button onClick={() => openEdit(sp)} className="text-xs text-emerald-400 uppercase tracking-wide">Bearbeiten</button>
-                        <button onClick={() => persistSpiele(spiele.filter((s) => s.id !== sp.id))} className="text-xs text-zinc-500 uppercase tracking-wide">Löschen</button>
+                        {kannVorschlagen && <button onClick={() => openEdit(sp)} className="text-xs text-emerald-400 uppercase tracking-wide">Bearbeiten</button>}
+                        {role === "admin" && <button onClick={() => loescheSpiel(sp)} className="text-xs text-red-400 uppercase tracking-wide">Löschen</button>}
                       </div>
                     </div>
                   );
