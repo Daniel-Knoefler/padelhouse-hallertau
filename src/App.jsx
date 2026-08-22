@@ -553,16 +553,20 @@ export default function PadelhouseApp() {
 
       {view === "home" && (
         <div>
-          <div className="bg-zinc-900 rounded-2xl p-3 mb-3">
-            <div className="flex items-center justify-between gap-2">
+          <div className="bg-zinc-900 rounded-2xl p-3 mb-3 relative">
+            <div className="absolute left-3 top-3 z-10">
               <GlockeButton badge={unreadBenachrichtigungen} onClick={() => setView("benachrichtigungen")} />
-              <button onClick={handleLogoTap} className="w-16 h-16 rounded-full bg-black border-2 border-white flex items-center justify-center shrink-0 overflow-hidden" aria-label="Padelhouse Hallertau Logo">
-                <img src={LOGO_DATA_URI} alt="Padelhouse Hallertau Logo" className="w-full h-full object-cover" />
-              </button>
+            </div>
+            <div className="absolute right-3 top-3 z-10">
               <button onClick={() => setView("profil")} className="w-7 h-7 rounded-full bg-black border border-zinc-700 flex items-center justify-center text-emerald-400 font-black text-xs shrink-0" aria-label="Profil">
                 {profile.name ? initialen(profile.name) : (
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="4" /><path d="M4 20c1.5-4 6-5 8-5s6.5 1 8 5" /></svg>
                 )}
+              </button>
+            </div>
+            <div className="flex justify-center py-1">
+              <button onClick={handleLogoTap} className="w-28 h-28 rounded-full bg-black border-2 border-white flex items-center justify-center shrink-0 overflow-hidden" aria-label="Padelhouse Hallertau Logo">
+                <img src={LOGO_DATA_URI} alt="Padelhouse Hallertau Logo" className="w-full h-full object-cover" />
               </button>
             </div>
             {role === "admin" && (
