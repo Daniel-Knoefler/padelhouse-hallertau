@@ -274,17 +274,17 @@ function TileIcon({ tileKey }) {
 function Tile({ tileKey, onClick, badge, moveMode, onMoveLeft, onMoveRight, disableLeft, disableRight }) {
   const meta = TILE_META[tileKey];
   return (
-    <div className="relative bg-white rounded-xl p-3 min-w-0">
+    <div className="relative rounded-xl p-3 min-w-0" style={{ background: "#1C5E27" }}>
       {badge > 0 && (
         <span className="absolute -top-1.5 -right-1.5 bg-emerald-500 text-zinc-950 text-xs font-black rounded-full w-5 h-5 flex items-center justify-center">
           {badge}
         </span>
       )}
       <button onClick={onClick} className="text-left w-full min-w-0" disabled={moveMode}>
-        <div className="w-10 h-10 rounded-lg bg-zinc-950 text-emerald-500 flex items-center justify-center mb-2">
+        <div className="w-10 h-10 rounded-lg bg-zinc-200 text-emerald-500 flex items-center justify-center mb-2">
           <TileIcon tileKey={tileKey} />
         </div>
-        <div className="text-zinc-950 font-bold text-sm leading-tight break-words">{meta.label}</div>
+        <div className="text-white font-black text-sm uppercase leading-tight break-words">{meta.label}</div>
       </button>
       {moveMode && (
         <div className="flex gap-1 mt-2">
