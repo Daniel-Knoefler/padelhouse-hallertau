@@ -650,7 +650,7 @@ export default function PadelhouseApp() {
                 </button>
               </div>
               {role === "admin" && (
-                <button onClick={() => setView("admin")} className="w-11 h-11 rounded-xl bg-emerald-500 flex items-center justify-center text-white shrink-0" aria-label="Admin-Bereich">
+                <button onClick={() => setView("admin")} className="w-11 h-11 rounded-xl bg-emerald-500 border-2 border-white flex items-center justify-center text-white shrink-0" aria-label="Admin-Bereich">
                   <span className="font-black text-[9px] uppercase tracking-tight leading-none">Admin</span>
                 </button>
               )}
