@@ -284,7 +284,7 @@ function Tile({ tileKey, onClick, badge, moveMode, onMoveLeft, onMoveRight, disa
         <div className="w-10 h-10 rounded-lg bg-zinc-200 border-2 border-black text-emerald-500 flex items-center justify-center mb-2">
           <TileIcon tileKey={tileKey} />
         </div>
-        <div className="text-white font-black text-sm uppercase leading-tight break-words">{meta.label}</div>
+        <div className="text-white font-black text-xs uppercase leading-tight tracking-tight break-words">{meta.label}</div>
       </button>
       {moveMode && (
         <div className="flex gap-1 mt-2">
@@ -653,6 +653,7 @@ export default function PadelhouseApp() {
                 <img src={LOGO_DATA_URI} alt="Padelhouse Hallertau Logo" className="w-full h-full object-contain" />
               </button>
             </div>
+            <div className="text-center italic font-black text-sm -mt-1" style={{ color: "#1C5E27" }}>more than a match</div>
             {role === "admin" && (
               <div className="flex justify-center mt-2">
                 <span className="px-3 py-0.5 rounded-full text-xs font-bold bg-emerald-500 text-zinc-950">Admin</span>
