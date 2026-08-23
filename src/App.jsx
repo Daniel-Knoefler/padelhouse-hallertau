@@ -274,7 +274,7 @@ function TileIcon({ tileKey }) {
 function Tile({ tileKey, onClick, badge, moveMode, onMoveLeft, onMoveRight, disableLeft, disableRight }) {
   const meta = TILE_META[tileKey];
   return (
-    <div className="relative rounded-xl p-3 min-w-0" style={{ background: "#1C5E27" }}>
+    <div className="relative rounded-xl p-3 min-w-0 border-2 border-white" style={{ background: "#1C5E27" }}>
       {badge > 0 && (
         <span className="absolute -top-1.5 -right-1.5 bg-emerald-500 text-zinc-950 text-xs font-black rounded-full w-5 h-5 flex items-center justify-center">
           {badge}
@@ -650,7 +650,7 @@ export default function PadelhouseApp() {
             </div>
             <div className="flex justify-center py-1">
               <button onClick={handleLogoTap} className="w-28 h-28 rounded-full bg-black border-2 border-white flex items-center justify-center shrink-0 overflow-hidden" aria-label="Padelhouse Hallertau Logo">
-                <img src={LOGO_DATA_URI} alt="Padelhouse Hallertau Logo" className="w-full h-full object-cover" />
+                <img src={LOGO_DATA_URI} alt="Padelhouse Hallertau Logo" className="w-full h-full object-contain p-2" />
               </button>
             </div>
             {role === "admin" && (
