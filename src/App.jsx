@@ -649,8 +649,8 @@ export default function PadelhouseApp() {
               </button>
             </div>
             <div className="flex justify-center py-1">
-              <button onClick={handleLogoTap} className="w-28 h-28 rounded-full bg-black border-2 border-white flex items-center justify-center shrink-0 overflow-hidden" aria-label="Padelhouse Hallertau Logo">
-                <img src={LOGO_DATA_URI} alt="Padelhouse Hallertau Logo" className="w-full h-full object-contain p-2" />
+              <button onClick={handleLogoTap} className="w-28 h-28 flex items-center justify-center shrink-0" aria-label="Padelhouse Hallertau Logo">
+                <img src={LOGO_DATA_URI} alt="Padelhouse Hallertau Logo" className="w-full h-full object-contain" />
               </button>
             </div>
             {role === "admin" && (
