@@ -218,10 +218,10 @@ function CourtDivider() {
 }
 function GlockeButton({ badge, onClick }) {
   return (
-    <button onClick={onClick} className="relative w-8 h-8 rounded-full bg-black border border-zinc-700 flex items-center justify-center text-emerald-400 shrink-0" aria-label="Benachrichtigungen">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 8a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z" /><path d="M10 20a2 2 0 0 0 4 0" /></svg>
+    <button onClick={onClick} className="relative w-11 h-11 rounded-full bg-black border border-zinc-700 flex items-center justify-center text-emerald-400 shrink-0" aria-label="Benachrichtigungen">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 8a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z" /><path d="M10 20a2 2 0 0 0 4 0" /></svg>
       {badge > 0 && (
-        <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center">
+        <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[10px] font-black rounded-full w-5 h-5 flex items-center justify-center">
           {badge}
         </span>
       )}
@@ -641,12 +641,18 @@ export default function PadelhouseApp() {
             <div className="absolute left-3 top-3 z-10">
               <GlockeButton badge={unreadBenachrichtigungen} onClick={() => setView("benachrichtigungen")} />
             </div>
-            <div className="absolute right-3 top-3 z-10">
-              <button onClick={() => setView("profil")} className="w-7 h-7 rounded-full bg-black border border-zinc-700 flex items-center justify-center text-emerald-400 font-black text-xs shrink-0" aria-label="Profil">
-                {profile.name ? initialen(profile.name) : (
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="4" /><path d="M4 20c1.5-4 6-5 8-5s6.5 1 8 5" /></svg>
-                )}
-              </button>
+            <div className="absolute right-3 top-3 z-10 flex flex-col items-end gap-1.5">
+              <div className="flex items-center gap-1.5">
+                <span className="text-zinc-300 text-xs font-bold uppercase">Profil</span>
+                <button onClick={() => setView("profil")} className="w-11 h-11 rounded-full bg-black border border-zinc-700 flex items-center justify-center text-emerald-400 font-black text-sm shrink-0" aria-label="Profil">
+                  {profile.name ? initialen(profile.name) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="4" /><path d="M4 20c1.5-4 6-5 8-5s6.5 1 8 5" /></svg>
+                  )}
+                </button>
+              </div>
+              {role === "admin" && (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500 text-white whitespace-nowrap">Admin</span>
+              )}
             </div>
             <div className="flex justify-center py-1">
               <button onClick={handleLogoTap} className="w-28 h-28 flex items-center justify-center shrink-0" aria-label="Padelhouse Hallertau Logo">
@@ -654,11 +660,6 @@ export default function PadelhouseApp() {
               </button>
             </div>
             <div className="text-center italic font-black text-lg -mt-1" style={{ color: "#1C5E27", transform: "skewX(-8deg)" }}>more than a match</div>
-            {role === "admin" && (
-              <div className="flex justify-center mt-2">
-                <span className="px-3 py-0.5 rounded-full text-xs font-bold bg-emerald-500 text-white">Admin</span>
-              </div>
-            )}
           </div>
 
           <div className="flex items-center justify-between mb-2">
