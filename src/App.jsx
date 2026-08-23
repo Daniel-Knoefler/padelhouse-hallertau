@@ -221,7 +221,7 @@ function GlockeButton({ badge, onClick }) {
     <button onClick={onClick} className="relative w-8 h-8 rounded-full bg-black border border-zinc-700 flex items-center justify-center text-emerald-400 shrink-0" aria-label="Benachrichtigungen">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 8a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z" /><path d="M10 20a2 2 0 0 0 4 0" /></svg>
       {badge > 0 && (
-        <span className="absolute -top-1 -right-1 bg-emerald-500 text-zinc-950 text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center">
+        <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center">
           {badge}
         </span>
       )}
@@ -276,7 +276,7 @@ function Tile({ tileKey, onClick, badge, moveMode, onMoveLeft, onMoveRight, disa
   return (
     <div className="relative rounded-xl p-3 min-w-0 border-2 border-white" style={{ background: "#1C5E27" }}>
       {badge > 0 && (
-        <span className="absolute -top-1.5 -right-1.5 bg-emerald-500 text-zinc-950 text-xs font-black rounded-full w-5 h-5 flex items-center justify-center">
+        <span className="absolute -top-1.5 -right-1.5 bg-emerald-500 text-white text-xs font-black rounded-full w-5 h-5 flex items-center justify-center">
           {badge}
         </span>
       )}
@@ -303,7 +303,7 @@ function SubTabs({ tabs, active, onChange }) {
           key={t.value}
           onClick={() => onChange(t.value)}
           className={"px-4 py-2 rounded-full text-sm font-bold uppercase tracking-wide " +
-            (active === t.value ? "bg-emerald-500 text-zinc-950" : "bg-zinc-900 text-zinc-400 border border-zinc-800")}
+            (active === t.value ? "bg-emerald-500 text-white" : "bg-zinc-900 text-zinc-400 border border-zinc-800")}
         >
           {t.label}
         </button>
@@ -618,7 +618,7 @@ export default function PadelhouseApp() {
                 <input className={inputCls} value={onboardForm.profilname} onChange={(e) => setOnboardForm({ ...onboardForm, profilname: e.target.value })} placeholder="wie du in Chat & Community heißen möchtest" />
               </Field>
               {onboardError && <p className="text-red-400 text-xs">{onboardError}</p>}
-              <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-zinc-950 font-bold uppercase tracking-wide text-sm">Los geht's</button>
+              <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-white font-bold uppercase tracking-wide text-sm">Los geht's</button>
               <p className="text-zinc-500 text-xs text-center">Bleibt auf diesem Gerät gespeichert, kein Passwort nötig.</p>
             </form>
           </div>
@@ -656,7 +656,7 @@ export default function PadelhouseApp() {
             <div className="text-center italic font-black text-lg -mt-1" style={{ color: "#1C5E27", transform: "skewX(-8deg)" }}>more than a match</div>
             {role === "admin" && (
               <div className="flex justify-center mt-2">
-                <span className="px-3 py-0.5 rounded-full text-xs font-bold bg-emerald-500 text-zinc-950">Admin</span>
+                <span className="px-3 py-0.5 rounded-full text-xs font-bold bg-emerald-500 text-white">Admin</span>
               </div>
             )}
           </div>
@@ -708,7 +708,7 @@ export default function PadelhouseApp() {
                 onChange={(e) => { setPinInput(e.target.value); setPinError(""); }} autoFocus />
             </Field>
             {pinError && <p className="text-red-400 text-xs">{pinError}</p>}
-            <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold uppercase tracking-wide">Bestätigen</button>
+            <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">Bestätigen</button>
           </form>
         </Modal>
       )}
@@ -833,7 +833,7 @@ function ProfilView({ profile, onSave, role, onAdminLogout }) {
           <div className="text-white font-bold text-sm mb-1">Benachrichtigungen</div>
           <p className="text-zinc-500 text-xs mb-3">Erhalte eine Push-Benachrichtigung bei neuen Chat-Nachrichten und News, auch wenn die App geschlossen ist.</p>
           <button type="button" onClick={pushUmschalten} disabled={pushLaden}
-            className={"w-full py-2 rounded-lg text-sm font-bold uppercase tracking-wide disabled:opacity-50 " + (pushStatus === "granted" ? "bg-zinc-800 text-zinc-300" : "bg-emerald-500 text-zinc-950")}>
+            className={"w-full py-2 rounded-lg text-sm font-bold uppercase tracking-wide disabled:opacity-50 " + (pushStatus === "granted" ? "bg-zinc-800 text-zinc-300" : "bg-emerald-500 text-white")}>
             {pushLaden ? "Einen Moment..." : pushStatus === "granted" ? "Benachrichtigungen deaktivieren" : "Benachrichtigungen aktivieren"}
           </button>
           {pushFehler && <p className="text-red-400 text-xs mt-2">{pushFehler}</p>}
@@ -842,7 +842,7 @@ function ProfilView({ profile, onSave, role, onAdminLogout }) {
           </p>
         </div>
 
-        <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-zinc-950 font-bold uppercase tracking-wide text-sm">
+        <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-white font-bold uppercase tracking-wide text-sm">
           Speichern
         </button>
         {saved && <p className="text-emerald-400 text-xs text-center">Gespeichert.</p>}
@@ -919,11 +919,11 @@ function LigaAnmeldungForm({ ligen, profile, onCreateTeam, onSaveProfile }) {
         )}
         <div className="flex gap-2">
           <button type="button" onClick={() => { setTeamModus("neu"); setTeamName(""); setError(""); }}
-            className={"flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wide " + (teamModus === "neu" ? "bg-emerald-500 text-zinc-950" : "bg-zinc-800 text-zinc-400")}>
+            className={"flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wide " + (teamModus === "neu" ? "bg-emerald-500 text-white" : "bg-zinc-800 text-zinc-400")}>
             Neues Team anlegen
           </button>
           <button type="button" onClick={() => { setTeamModus("beitreten"); setTeamName(bestehendeTeams[0]?.name || ""); setError(""); }}
-            className={"flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wide " + (teamModus === "beitreten" ? "bg-emerald-500 text-zinc-950" : "bg-zinc-800 text-zinc-400")}>
+            className={"flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wide " + (teamModus === "beitreten" ? "bg-emerald-500 text-white" : "bg-zinc-800 text-zinc-400")}>
             Team beitreten
           </button>
         </div>
@@ -941,7 +941,7 @@ function LigaAnmeldungForm({ ligen, profile, onCreateTeam, onSaveProfile }) {
           </Field>
         )}
         {error && <p className="text-red-400 text-xs">{error}</p>}
-        <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-zinc-950 font-bold uppercase tracking-wide text-sm">Anmelden</button>
+        <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-white font-bold uppercase tracking-wide text-sm">Anmelden</button>
       </form>
     </div>
   );
@@ -1001,7 +1001,7 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
       <div className="text-center py-10">
         <div className="text-white font-black uppercase tracking-wide mb-2">Noch keine Liga angelegt</div>
         {role === "admin" && (
-          <button onClick={() => setShowLigaForm(true)} className="px-5 py-2 rounded-lg bg-emerald-500 text-zinc-950 font-bold uppercase tracking-wide text-sm">
+          <button onClick={() => setShowLigaForm(true)} className="px-5 py-2 rounded-lg bg-emerald-500 text-white font-bold uppercase tracking-wide text-sm">
             Liga erstellen
           </button>
         )}
@@ -1016,7 +1016,7 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
               setLigaNameInput(""); setShowLigaForm(false);
             }} className="space-y-3">
               <Field label="Name der Liga"><input className={inputCls} value={ligaNameInput} onChange={(e) => setLigaNameInput(e.target.value)} placeholder="z. B. Liga 2 (Fortgeschritten)" /></Field>
-              <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold uppercase tracking-wide">Erstellen</button>
+              <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">Erstellen</button>
             </form>
           </Modal>
         )}
@@ -1254,7 +1254,7 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
           {role === "admin" ? (
             <div className="space-y-3">
               <textarea className={inputCls + " min-h-[160px]"} value={infoTextInput} onChange={(e) => setInfoTextInput(e.target.value)} placeholder="z. B. Spielregeln, Ansprechpartner, besondere Hinweise zur Liga..." />
-              <button onClick={saveInfoText} className="w-full py-2 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold uppercase tracking-wide">Speichern</button>
+              <button onClick={saveInfoText} className="w-full py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">Speichern</button>
             </div>
           ) : (
             <p className="text-zinc-300 text-sm whitespace-pre-wrap">{activeLiga?.infoText || "Noch keine Informationen hinterlegt."}</p>
@@ -1328,7 +1328,7 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
             </button>
           )}
           <button onClick={() => { reset(); setShowForm(true); }} disabled={teams.length < 2}
-            className="w-full mb-4 py-2 rounded-lg bg-emerald-500 text-zinc-950 font-bold uppercase tracking-wide text-sm disabled:opacity-30">
+            className="w-full mb-4 py-2 rounded-lg bg-emerald-500 text-white font-bold uppercase tracking-wide text-sm disabled:opacity-30">
             Spiel eintragen
           </button>
 
@@ -1412,7 +1412,7 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
                       )}
 
                       {sp.ergebnis && !sp.bestaetigt && kannAnnehmen && (
-                        <button onClick={() => bestaetigeErgebnis(sp.id)} className="w-full mt-3 py-2 rounded-lg bg-emerald-500 text-zinc-950 text-xs font-bold uppercase tracking-wide">
+                        <button onClick={() => bestaetigeErgebnis(sp.id)} className="w-full mt-3 py-2 rounded-lg bg-emerald-500 text-white text-xs font-bold uppercase tracking-wide">
                           Ergebnis bestätigen ({sp.ergebnis})
                         </button>
                       )}
@@ -1455,7 +1455,7 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
             {error && <p className="text-red-400 text-xs">{error}</p>}
             <div className="flex gap-2 pt-2">
               <button type="button" onClick={() => { setShowForm(false); reset(); }} className="flex-1 py-2 rounded-lg bg-zinc-800 text-zinc-300 text-sm font-bold uppercase tracking-wide">Abbrechen</button>
-              <button type="submit" className="flex-1 py-2 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold uppercase tracking-wide">Speichern</button>
+              <button type="submit" className="flex-1 py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">Speichern</button>
             </div>
           </form>
         </Modal>
@@ -1472,7 +1472,7 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
             setLigaNameInput(""); setShowLigaForm(false);
           }} className="space-y-3">
             <Field label="Name der Liga"><input className={inputCls} value={ligaNameInput} onChange={(e) => setLigaNameInput(e.target.value)} placeholder="z. B. Liga 2 (Fortgeschritten)" /></Field>
-            <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold uppercase tracking-wide">Erstellen</button>
+            <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">Erstellen</button>
           </form>
         </Modal>
       )}
@@ -1525,7 +1525,7 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
                 <input className={inputCls} placeholder="Name" value={playerForm.name} onChange={(e) => setPlayerForm({ ...playerForm, name: e.target.value })} />
                 <input className={inputCls} type="email" placeholder="E-Mail" value={playerForm.email} onChange={(e) => setPlayerForm({ ...playerForm, email: e.target.value })} />
                 <input className={inputCls} placeholder="Playtomic-Profilname" value={playerForm.playtomicName} onChange={(e) => setPlayerForm({ ...playerForm, playtomicName: e.target.value })} />
-                <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold uppercase tracking-wide">Hinzufügen</button>
+                <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">Hinzufügen</button>
               </form>
             )}
           </Modal>
@@ -1629,7 +1629,7 @@ function CommunityView({ news, gruppen, role, profile, onNews, onGruppen, onMark
               <div className="text-xs text-emerald-500 uppercase tracking-wide">News posten</div>
               <input className={inputCls} placeholder="Titel" value={newsForm.title} onChange={(e) => setNewsForm({ ...newsForm, title: e.target.value })} />
               <textarea className={inputCls} placeholder="Text" rows={2} value={newsForm.text} onChange={(e) => setNewsForm({ ...newsForm, text: e.target.value })} />
-              <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold uppercase tracking-wide">Veröffentlichen</button>
+              <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">Veröffentlichen</button>
             </form>
           )}
           {news.map((n) => (
@@ -1650,7 +1650,7 @@ function CommunityView({ news, gruppen, role, profile, onNews, onGruppen, onMark
       {tab === "gruppen" && (
         <div className="space-y-3">
           {role === "admin" && (
-            <button onClick={() => setShowGruppeForm(true)} className="w-full py-2 rounded-lg bg-emerald-500 text-zinc-950 font-bold uppercase tracking-wide text-sm">
+            <button onClick={() => setShowGruppeForm(true)} className="w-full py-2 rounded-lg bg-emerald-500 text-white font-bold uppercase tracking-wide text-sm">
               Neue Gruppe erstellen
             </button>
           )}
@@ -1685,7 +1685,7 @@ function CommunityView({ news, gruppen, role, profile, onNews, onGruppen, onMark
                 </button>
                 <div className="flex items-center gap-3">
                   {!st.muted && unread > 0 && (
-                    <span className="bg-emerald-500 text-zinc-950 text-xs font-black rounded-full w-5 h-5 flex items-center justify-center">{unread}</span>
+                    <span className="bg-emerald-500 text-white text-xs font-black rounded-full w-5 h-5 flex items-center justify-center">{unread}</span>
                   )}
                   <button onClick={() => hideGruppe(g.id)} className="text-zinc-500 text-xs uppercase tracking-wide">Entfernen</button>
                 </div>
@@ -1710,14 +1710,14 @@ function CommunityView({ news, gruppen, role, profile, onNews, onGruppen, onMark
                   <button onClick={() => {
                     const neu = renameInput.trim();
                     if (neu && neu !== g.name) onGruppen(gruppen.map((gg) => gg.id === g.id ? { ...gg, name: neu } : gg));
-                  }} className="px-4 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold whitespace-nowrap">Speichern</button>
+                  }} className="px-4 rounded-lg bg-emerald-500 text-white text-sm font-bold whitespace-nowrap">Speichern</button>
                 </div>
               </div>
             )}
             <div className="flex items-center justify-between mb-4">
               <div className="text-zinc-400 text-sm">{g.mitglieder} Mitglieder</div>
               <button onClick={() => toggleBeitreten(g.id)}
-                className={"px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wide " + (st.beigetreten ? "bg-zinc-800 text-zinc-300" : "bg-emerald-500 text-zinc-950")}>
+                className={"px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wide " + (st.beigetreten ? "bg-zinc-800 text-zinc-300" : "bg-emerald-500 text-white")}>
                 {st.beigetreten ? "Verlassen" : "Beitreten"}
               </button>
             </div>
@@ -1744,7 +1744,7 @@ function CommunityView({ news, gruppen, role, profile, onNews, onGruppen, onMark
               <form onSubmit={addOpenMatch} className="space-y-2 mb-4">
                 <input className={inputCls} placeholder="z. B. Suche 1 Mitspieler, Sa 10 Uhr" value={omText} onChange={(e) => setOmText(e.target.value)} />
                 <input className={inputCls} placeholder="Playtomic-Link (optional)" value={omLink} onChange={(e) => setOmLink(e.target.value)} />
-                <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold uppercase tracking-wide">Teilen</button>
+                <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">Teilen</button>
               </form>
             ) : (
               <button onClick={() => setOmGruppe(g.id)} className="text-xs text-emerald-400 uppercase tracking-wide">Open Match teilen</button>
@@ -1763,7 +1763,7 @@ function CommunityView({ news, gruppen, role, profile, onNews, onGruppen, onMark
               </div>
               <div className="flex gap-2">
                 <input className={inputCls + " rounded-full"} placeholder="Nachricht schreiben..." value={gruppeText} onChange={(e) => setGruppeText(e.target.value)} />
-                <button onClick={() => sendGruppenNachricht(g.id)} className="w-10 h-10 rounded-full bg-emerald-500 text-zinc-950 flex items-center justify-center shrink-0" aria-label="Senden">
+                <button onClick={() => sendGruppenNachricht(g.id)} className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0" aria-label="Senden">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20l18-8L3 4v6l12 2-12 2v6Z" /></svg>
                 </button>
               </div>
@@ -1776,7 +1776,7 @@ function CommunityView({ news, gruppen, role, profile, onNews, onGruppen, onMark
         <Modal title="Neue Gruppe erstellen" onClose={() => setShowGruppeForm(false)}>
           <form onSubmit={addGruppe} className="space-y-3">
             <Field label="Gruppenname"><input className={inputCls} value={gruppeName} onChange={(e) => setGruppeName(e.target.value)} placeholder="z. B. Fortgeschritten (4+)" /></Field>
-            <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold uppercase tracking-wide">Erstellen</button>
+            <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">Erstellen</button>
           </form>
         </Modal>
       )}
@@ -1866,14 +1866,14 @@ function TrainingView({ kurse, role, onSave, profile, buchungen, onBuchungen }) 
   return (
     <div>
       {role === "admin" && (
-        <button onClick={() => { reset(); setShowForm(true); }} className="w-full mb-4 py-2 rounded-lg bg-emerald-500 text-zinc-950 font-bold uppercase tracking-wide text-sm">Kurstermin anlegen</button>
+        <button onClick={() => { reset(); setShowForm(true); }} className="w-full mb-4 py-2 rounded-lg bg-emerald-500 text-white font-bold uppercase tracking-wide text-sm">Kurstermin anlegen</button>
       )}
 
       {confirmMsg && (
         <div className="bg-zinc-900 border border-emerald-700 rounded-lg p-4 mb-4 text-sm text-emerald-400 space-y-3">
           <p>{confirmMsg}</p>
           <div className="flex gap-2">
-            {mailLink && <a href={mailLink} className="flex-1 text-center px-4 py-2 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold uppercase tracking-wide">E-Mail öffnen</a>}
+            {mailLink && <a href={mailLink} className="flex-1 text-center px-4 py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">E-Mail öffnen</a>}
             {waLink && <a href={waLink} target="_blank" rel="noopener noreferrer" className="flex-1 text-center px-4 py-2 rounded-lg bg-zinc-800 text-emerald-400 text-sm font-bold uppercase tracking-wide">WhatsApp öffnen</a>}
           </div>
         </div>
@@ -1903,7 +1903,7 @@ function TrainingView({ kurse, role, onSave, profile, buchungen, onBuchungen }) 
             )}
 
             {k.typ === "oeffentlich" ? (
-              <a href={k.link} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block px-4 py-1.5 rounded-lg bg-emerald-500 text-zinc-950 text-xs font-bold uppercase tracking-wide">
+              <a href={k.link} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block px-4 py-1.5 rounded-lg bg-emerald-500 text-white text-xs font-bold uppercase tracking-wide">
                 Zur Buchung (Playtomic)
               </a>
             ) : eigene ? (
@@ -1928,10 +1928,10 @@ function TrainingView({ kurse, role, onSave, profile, buchungen, onBuchungen }) 
                     </select>
                     <p className="text-zinc-500 text-xs">Kostenlose Stornierung bis 36 Stunden vor Kursbeginn möglich.</p>
                     {bookError && <p className="text-red-400 text-xs">{bookError}</p>}
-                    <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold uppercase tracking-wide">Verbindlich buchen</button>
+                    <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">Verbindlich buchen</button>
                   </form>
                 ) : (
-                  <button disabled={k.belegt >= k.plaetze} onClick={() => setBookKursId(k.id)} className="mt-3 px-4 py-1.5 rounded-lg bg-emerald-500 text-zinc-950 text-xs font-bold uppercase tracking-wide disabled:opacity-30">
+                  <button disabled={k.belegt >= k.plaetze} onClick={() => setBookKursId(k.id)} className="mt-3 px-4 py-1.5 rounded-lg bg-emerald-500 text-white text-xs font-bold uppercase tracking-wide disabled:opacity-30">
                     {k.belegt >= k.plaetze ? "Ausgebucht" : "Platz buchen"}
                   </button>
                 )}
@@ -2006,7 +2006,7 @@ function TrainingView({ kurse, role, onSave, profile, buchungen, onBuchungen }) 
             ) : (
               <Field label="Playtomic-Link"><input className={inputCls} value={form.link} onChange={(e) => setForm({ ...form, link: e.target.value })} placeholder="https://playtomic.com/..." /></Field>
             )}
-            <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold uppercase tracking-wide">{editId ? "Speichern" : "Anlegen"}</button>
+            <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">{editId ? "Speichern" : "Anlegen"}</button>
           </form>
         </Modal>
       )}
@@ -2123,7 +2123,7 @@ function BuchungView({ anfragen, onAnfragen, turniere, onTurniere, events, onEve
           <p>{confirm}</p>
           <div className="flex gap-2">
             {mailLink && (
-              <a href={mailLink} className="flex-1 text-center px-4 py-2 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold uppercase tracking-wide">
+              <a href={mailLink} className="flex-1 text-center px-4 py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">
                 E-Mail öffnen
               </a>
             )}
@@ -2158,7 +2158,7 @@ function BuchungView({ anfragen, onAnfragen, turniere, onTurniere, events, onEve
                   <input className={inputCls} placeholder="Name" value={eventForm.name} onChange={(e) => setEventForm({ ...eventForm, name: e.target.value })} />
                   <input className={inputCls} type="email" placeholder="E-Mail" value={eventForm.email} onChange={(e) => setEventForm({ ...eventForm, email: e.target.value })} />
                   <input className={inputCls} type="number" min="1" placeholder="Personenanzahl" value={eventForm.personen} onChange={(e) => setEventForm({ ...eventForm, personen: e.target.value })} />
-                  <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold uppercase tracking-wide">Anmelden</button>
+                  <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">Anmelden</button>
                 </form>
               ) : (
                 <button onClick={() => setEventTarget(ev.id)} className="mt-3 text-xs text-emerald-400 uppercase tracking-wide">Anmelden</button>
@@ -2174,7 +2174,7 @@ function BuchungView({ anfragen, onAnfragen, turniere, onTurniere, events, onEve
             <Field label="Titel"><input className={inputCls} value={neuesEventForm.titel} onChange={(e) => setNeuesEventForm({ ...neuesEventForm, titel: e.target.value })} placeholder="z. B. Sommerfest im Padelhouse" /></Field>
             <Field label="Datum"><input className={inputCls} type="date" value={neuesEventForm.datum} onChange={(e) => setNeuesEventForm({ ...neuesEventForm, datum: e.target.value })} /></Field>
             <Field label="Beschreibung"><input className={inputCls} value={neuesEventForm.beschreibung} onChange={(e) => setNeuesEventForm({ ...neuesEventForm, beschreibung: e.target.value })} placeholder="kurze Beschreibung" /></Field>
-            <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold uppercase tracking-wide">Anlegen & alle benachrichtigen</button>
+            <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">Anlegen & alle benachrichtigen</button>
           </form>
         </Modal>
       )}
@@ -2188,7 +2188,7 @@ function BuchungView({ anfragen, onAnfragen, turniere, onTurniere, events, onEve
           <Field label="Wunschdatum"><input className={inputCls} type="date" value={peForm.datum} onChange={(e) => setPeForm({ ...peForm, datum: e.target.value })} /></Field>
           <Field label="Personenanzahl"><input className={inputCls} type="number" min="1" value={peForm.personen} onChange={(e) => setPeForm({ ...peForm, personen: e.target.value })} /></Field>
           <Field label="Nachricht"><textarea className={inputCls} rows={3} value={peForm.nachricht} onChange={(e) => setPeForm({ ...peForm, nachricht: e.target.value })} /></Field>
-          <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold uppercase tracking-wide">Anfrage senden</button>
+          <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">Anfrage senden</button>
         </form>
       )}
 
@@ -2223,7 +2223,7 @@ function BuchungView({ anfragen, onAnfragen, turniere, onTurniere, events, onEve
               )
             )}
             {bmForm.zahlung !== "paypal" && (
-              <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold uppercase tracking-wide">Reservieren</button>
+              <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">Reservieren</button>
             )}
           </form>
         </div>
@@ -2232,7 +2232,7 @@ function BuchungView({ anfragen, onAnfragen, turniere, onTurniere, events, onEve
       {tab === "turniere" && (
         <div>
           {role === "admin" && (
-            <button onClick={() => setShowTurnierForm(true)} className="w-full mb-4 py-2 rounded-lg bg-emerald-500 text-zinc-950 font-bold uppercase tracking-wide text-sm">Turnier erstellen</button>
+            <button onClick={() => setShowTurnierForm(true)} className="w-full mb-4 py-2 rounded-lg bg-emerald-500 text-white font-bold uppercase tracking-wide text-sm">Turnier erstellen</button>
           )}
           {turniere.length === 0 ? <p className="text-zinc-500 text-sm">Noch keine Turniere geplant.</p> : (
             <div className="space-y-3">
@@ -2255,7 +2255,7 @@ function BuchungView({ anfragen, onAnfragen, turniere, onTurniere, events, onEve
                   </select>
                 </Field>
                 <Field label="Datum"><input className={inputCls} type="date" value={turnierForm.datum} onChange={(e) => setTurnierForm({ ...turnierForm, datum: e.target.value })} /></Field>
-                <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold uppercase tracking-wide">Erstellen</button>
+                <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">Erstellen</button>
               </form>
             </Modal>
           )}
@@ -2340,7 +2340,7 @@ function FanshopView({ produkte, onSaveProdukte, role, vormerkungen, onSave }) {
   return (
     <div>
       {role === "admin" && (
-        <button onClick={() => { resetProduktForm(); setShowProduktForm(true); }} className="w-full mb-4 py-2 rounded-lg bg-emerald-500 text-zinc-950 font-bold uppercase tracking-wide text-sm">
+        <button onClick={() => { resetProduktForm(); setShowProduktForm(true); }} className="w-full mb-4 py-2 rounded-lg bg-emerald-500 text-white font-bold uppercase tracking-wide text-sm">
           Neues Produkt anlegen
         </button>
       )}
@@ -2406,7 +2406,7 @@ function FanshopView({ produkte, onSaveProdukte, role, vormerkungen, onSave }) {
               ) : (
                 <div className="flex gap-2 pt-2">
                   <button type="button" onClick={() => setTarget(null)} className="flex-1 py-2 rounded-lg bg-zinc-800 text-zinc-300 text-sm font-bold uppercase tracking-wide">Abbrechen</button>
-                  <button type="submit" className="flex-1 py-2 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold uppercase tracking-wide">Vormerken</button>
+                  <button type="submit" className="flex-1 py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">Vormerken</button>
                 </div>
               )}
             </form>
@@ -2415,7 +2415,7 @@ function FanshopView({ produkte, onSaveProdukte, role, vormerkungen, onSave }) {
             <div className="text-center py-6 space-y-3">
               <p className="text-emerald-400 text-sm">Vormerkung eingegangen. Sende sie jetzt per E-Mail oder WhatsApp an den Betreiber ab.</p>
               <div className="flex gap-2">
-                {mailLink && <a href={mailLink} className="flex-1 text-center px-4 py-2 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold uppercase tracking-wide">E-Mail öffnen</a>}
+                {mailLink && <a href={mailLink} className="flex-1 text-center px-4 py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">E-Mail öffnen</a>}
                 {waLink && <a href={waLink} target="_blank" rel="noopener noreferrer" className="flex-1 text-center px-4 py-2 rounded-lg bg-zinc-800 text-emerald-400 text-sm font-bold uppercase tracking-wide">WhatsApp öffnen</a>}
               </div>
               <button onClick={() => setTarget(null)} className="w-full px-5 py-2 rounded-lg bg-zinc-800 text-zinc-300 text-sm font-bold uppercase tracking-wide">Schließen</button>
@@ -2433,7 +2433,7 @@ function FanshopView({ produkte, onSaveProdukte, role, vormerkungen, onSave }) {
             <Field label="Bild-URL (optional)"><input className={inputCls} value={produktForm.bildUrl} onChange={(e) => setProduktForm({ ...produktForm, bildUrl: e.target.value })} placeholder="https://..." /></Field>
             {produktForm.bildUrl && <img src={produktForm.bildUrl} alt="Vorschau" className="w-full aspect-square object-cover rounded-lg" />}
             <p className="text-zinc-500 text-xs">Lade das Produktfoto z. B. bei Google Fotos, Imgur oder eurer eigenen Website hoch und füge hier den Bild-Link ein.</p>
-            <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold uppercase tracking-wide">{editId ? "Speichern" : "Anlegen"}</button>
+            <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">{editId ? "Speichern" : "Anlegen"}</button>
           </form>
         </Modal>
       )}
@@ -2503,7 +2503,7 @@ function ChatView({ threads, onSave, chatStatus, onStatus, profile, role }) {
               <button onClick={() => {
                 const neu = renameInput.trim();
                 if (neu && neu !== active.name) onSave(threads.map((t) => t.id === active.id ? { ...t, name: neu } : t));
-              }} className="px-4 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold whitespace-nowrap">Speichern</button>
+              }} className="px-4 rounded-lg bg-emerald-500 text-white text-sm font-bold whitespace-nowrap">Speichern</button>
             </div>
           </div>
         )}
@@ -2530,7 +2530,7 @@ function ChatView({ threads, onSave, chatStatus, onStatus, profile, role }) {
         </div>
         <form onSubmit={send} className="flex gap-2">
           <input className={inputCls + " rounded-full"} placeholder="Nachricht schreiben..." value={text} onChange={(e) => setText(e.target.value)} />
-          <button type="submit" className="w-10 h-10 rounded-full bg-emerald-500 text-zinc-950 flex items-center justify-center shrink-0" aria-label="Senden">
+          <button type="submit" className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0" aria-label="Senden">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20l18-8L3 4v6l12 2-12 2v6Z" /></svg>
           </button>
         </form>
@@ -2549,7 +2549,7 @@ function ChatView({ threads, onSave, chatStatus, onStatus, profile, role }) {
               <div className="flex items-center justify-between">
                 <div className="text-white font-bold">{t.name}</div>
                 {!st.muted && unread > 0 && (
-                  <span className="bg-emerald-500 text-zinc-950 text-xs font-black rounded-full w-5 h-5 flex items-center justify-center shrink-0 ml-2">{unread}</span>
+                  <span className="bg-emerald-500 text-white text-xs font-black rounded-full w-5 h-5 flex items-center justify-center shrink-0 ml-2">{unread}</span>
                 )}
               </div>
               <div className="text-zinc-500 text-xs mt-1">{t.type === "1:1" ? "Direktnachricht" : t.type === "gruppe" ? "Gruppe" : "Offener Chat"}{st.muted ? " · stummgeschaltet" : ""}</div>
@@ -2805,7 +2805,7 @@ function MeineBuchungenView({ buchungen, onSave, courts, onCourts, role }) {
     <div>
       <p className="text-zinc-400 text-sm mb-4">Trag hier deine über Playtomic gebuchten Termine ein, damit du Datum, Uhrzeit, Court und Zugangspin immer griffbereit hast.</p>
 
-      <button onClick={openNew} className="w-full mb-4 py-2 rounded-lg bg-emerald-500 text-zinc-950 font-bold uppercase tracking-wide text-sm">
+      <button onClick={openNew} className="w-full mb-4 py-2 rounded-lg bg-emerald-500 text-white font-bold uppercase tracking-wide text-sm">
         Termin eintragen
       </button>
 
@@ -2853,7 +2853,7 @@ function MeineBuchungenView({ buchungen, onSave, courts, onCourts, role }) {
             <Field label="Zugangspin"><input className={inputCls} value={form.zugangspin} onChange={(e) => setForm({ ...form, zugangspin: e.target.value })} placeholder="z. B. 4821" /></Field>
             <div className="flex gap-2 pt-2">
               <button type="button" onClick={() => { setShowForm(false); reset(); }} className="flex-1 py-2 rounded-lg bg-zinc-800 text-zinc-300 text-sm font-bold uppercase tracking-wide">Abbrechen</button>
-              <button type="submit" className="flex-1 py-2 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold uppercase tracking-wide">Speichern</button>
+              <button type="submit" className="flex-1 py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">Speichern</button>
             </div>
           </form>
         </Modal>
@@ -2871,7 +2871,7 @@ function MeineBuchungenView({ buchungen, onSave, courts, onCourts, role }) {
           </div>
           <form onSubmit={addCourt} className="flex gap-2">
             <input className={inputCls} value={courtInput} onChange={(e) => setCourtInput(e.target.value)} placeholder="z. B. Court 4" />
-            <button type="submit" className="px-4 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold">+</button>
+            <button type="submit" className="px-4 rounded-lg bg-emerald-500 text-white text-sm font-bold">+</button>
           </form>
         </Modal>
       )}
@@ -2949,7 +2949,7 @@ function FirmenbenefitView({ anfragen, onSave }) {
         <div className="bg-zinc-900 border border-emerald-700 rounded-lg p-4 mb-4 text-sm text-emerald-400 space-y-3">
           <p>Registrierung gespeichert. Sende sie jetzt per E-Mail oder WhatsApp an den Betreiber ab.</p>
           <div className="flex gap-2">
-            {mailLink && <a href={mailLink} className="flex-1 text-center px-4 py-2 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold uppercase tracking-wide">E-Mail öffnen</a>}
+            {mailLink && <a href={mailLink} className="flex-1 text-center px-4 py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">E-Mail öffnen</a>}
             {waLink && <a href={waLink} target="_blank" rel="noopener noreferrer" className="flex-1 text-center px-4 py-2 rounded-lg bg-zinc-800 text-emerald-400 text-sm font-bold uppercase tracking-wide">WhatsApp öffnen</a>}
           </div>
         </div>
@@ -2970,7 +2970,7 @@ function FirmenbenefitView({ anfragen, onSave }) {
           <input className={inputCls} value={form.anbieterId} onChange={(e) => setForm({ ...form, anbieterId: e.target.value })} placeholder="Mitglieds-/Vertrags-ID" />
         </Field>
         {error && <p className="text-red-400 text-xs">{error}</p>}
-        <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold uppercase tracking-wide">Registrieren</button>
+        <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">Registrieren</button>
       </form>
     </div>
   );
@@ -3017,7 +3017,7 @@ function WuenscheView({ ideen, onSave, role, onMarkRead }) {
       <form onSubmit={submit} className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 space-y-2 mb-5">
         <textarea className={inputCls} placeholder="Deine Idee..." rows={2} value={form.text} onChange={(e) => setForm({ ...form, text: e.target.value })} />
         <input className={inputCls} placeholder="Name (optional)" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-        <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-zinc-950 text-sm font-bold uppercase tracking-wide">Idee einreichen</button>
+        <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">Idee einreichen</button>
         {(mailLink || waLink) && (
           <div className="flex gap-2">
             {mailLink && (
@@ -3050,7 +3050,7 @@ function WuenscheView({ ideen, onSave, role, onMarkRead }) {
                     <div className="mt-2 flex gap-2">
                       <input className={inputCls} placeholder="Antwort/Kommentar" value={commentDrafts[idea.id] ?? idea.comment}
                         onChange={(e) => setCommentDrafts({ ...commentDrafts, [idea.id]: e.target.value })} />
-                      <button onClick={() => saveComment(idea.id)} className="px-3 rounded-lg bg-emerald-500 text-zinc-950 text-xs font-bold">OK</button>
+                      <button onClick={() => saveComment(idea.id)} className="px-3 rounded-lg bg-emerald-500 text-white text-xs font-bold">OK</button>
                     </div>
                   )}
                 </div>
