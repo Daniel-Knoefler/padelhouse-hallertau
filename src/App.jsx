@@ -653,7 +653,7 @@ export default function PadelhouseApp() {
                 <img src={LOGO_DATA_URI} alt="Padelhouse Hallertau Logo" className="w-full h-full object-contain" />
               </button>
             </div>
-            <div className="text-center italic font-black text-sm -mt-1" style={{ color: "#1C5E27" }}>more than a match</div>
+            <div className="text-center italic font-black text-lg -mt-1" style={{ color: "#1C5E27", transform: "skewX(-8deg)" }}>more than a match</div>
             {role === "admin" && (
               <div className="flex justify-center mt-2">
                 <span className="px-3 py-0.5 rounded-full text-xs font-bold bg-emerald-500 text-zinc-950">Admin</span>
