@@ -580,9 +580,8 @@ export default function PadelhouseApp() {
     : benachrichtigungen.length;
 
   const visibleTiles = useMemo(() => {
-    const base = tileOrder.filter((k) => TILES_DEFAULT.includes(k));
-    return role === "admin" ? [...base, "admin"].filter((v, i, a) => a.indexOf(v) === i) : base;
-  }, [tileOrder, role]);
+    return tileOrder.filter((k) => TILES_DEFAULT.includes(k));
+  }, [tileOrder]);
 
   function moveTile(key, dir) {
     const idx = tileOrder.indexOf(key);
@@ -651,7 +650,9 @@ export default function PadelhouseApp() {
                 </button>
               </div>
               {role === "admin" && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500 text-white whitespace-nowrap">Admin</span>
+                <button onClick={() => setView("admin")} className="w-11 h-11 rounded-full bg-emerald-500 flex items-center justify-center text-white shrink-0" aria-label="Admin-Bereich">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" /></svg>
+                </button>
               )}
             </div>
             <div className="flex justify-center py-1">
@@ -666,7 +667,7 @@ export default function PadelhouseApp() {
             <div className="text-lg font-black uppercase tracking-tight text-zinc-200 leading-tight">
               Willkommen{(profile.profilname || profile.name) ? `, ${profile.profilname || profile.name}` : ""}
             </div>
-            <button onClick={() => setMoveMode(!moveMode)} className="flex items-center gap-1 text-xs font-bold text-white bg-zinc-800 rounded-full px-3 py-1.5 shrink-0">
+            <button onClick={() => setMoveMode(!moveMode)} className="flex items-center gap-1 text-xs font-bold text-white bg-zinc-800 rounded-full px-3 py-1.5 shrink-0 uppercase">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z" /></svg>
               {moveMode ? "Fertig" : "Anordnen"}
             </button>
