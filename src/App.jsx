@@ -136,7 +136,7 @@ const TILE_META = {
 };
 
 import { supabase } from "./supabaseClient";
-import { pushWirdUnterstuetzt, pushBerechtigungStatus, pushAktivieren, pushDeaktivieren, pushBenachrichtigungSenden, pushTeamAktualisieren, benachrichtigungenLaden, benachrichtigungLoeschen, alleBenachrichtigungenLoeschen, pushAdminEmailSenden } from "./push";
+import { pushWirdUnterstuetzt, pushBerechtigungStatus, pushAktivieren, pushDeaktivieren, pushBenachrichtigungSenden, pushTeamAktualisieren, benachrichtigungenLaden, benachrichtigungLoeschen, alleBenachrichtigungenLoeschen, pushAdminEmailSenden, pushStummschaltungenSynchronisieren } from "./push";
 
 function getDeviceId() {
   let id = localStorage.getItem("padelhouse-device-id");
@@ -543,6 +543,13 @@ export default function PadelhouseApp() {
   function markNewsRead(count) { setNewsReadCount(count); saveKey("news-read-count", false, count); }
   function markIdeenRead(count) { setIdeenReadCount(count); saveKey("ideen-read-count", false, count); }
   function persistGruppenStatus(next) { setGruppenStatus(next); saveKey("community-gruppen-status", false, next); }
+
+  useEffect(() => {
+    const stumm = [];
+    Object.entries(chatStatus).forEach(([id, st]) => { if (st?.muted) stumm.push("chat-" + id); });
+    Object.entries(gruppenStatus).forEach(([id, st]) => { if (st?.muted || st?.hidden) stumm.push("gruppe-" + id); });
+    pushStummschaltungenSynchronisieren(stumm);
+  }, [chatStatus, gruppenStatus]);
   function persistKursBuchungen(next) { setKursBuchungen(next); saveKey("meine-kursbuchungen", false, next); }
   function persistBallmaschinePreis(next) { setBallmaschinePreis(next); saveKey("ballmaschine-preis", true, next); }
   function persistFanshopProdukte(next) { setFanshopProdukte(next); saveKey("fanshop-produkte", true, next); }
@@ -1595,6 +1602,7 @@ function CommunityView({ news, gruppen, role, profile, onNews, onGruppen, onMark
     onGruppen(next);
     const updated = next.find((g) => g.id === id);
     onGruppenStatus({ ...gruppenStatus, [id]: { ...statusOf(id), readCount: updated.messages.length } });
+    pushBenachrichtigungSenden(sender + " in " + updated.name, gruppeText, "/?view=community", null, "gruppe-" + id);
     setGruppeText("");
   }
 
@@ -2477,7 +2485,7 @@ function ChatView({ threads, onSave, chatStatus, onStatus, profile, role }) {
     const updated = nextThreads.find((t) => t.id === activeId);
     onStatus({ ...chatStatus, [activeId]: { ...statusOf(activeId), readCount: updated.messages.length } });
     if (updated.type === "offen") {
-      pushBenachrichtigungSenden(sender + " im Hallen-Chat", text, "/?view=chat");
+      pushBenachrichtigungSenden(sender + " im Hallen-Chat", text, "/?view=chat", null, "chat-" + activeId);
     }
     if (updated.type === "1:1" && role !== "admin") {
       pushAdminEmailSenden(
