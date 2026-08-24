@@ -1318,10 +1318,14 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
         </div>
       )}
 
-      <div className="flex items-center gap-2 mb-4">
-        <div className="flex-1"><SubTabs tabs={[{ value: "tabelle", label: "Tabelle" }, { value: "spielplan", label: "Spielplan" }]} active={tab} onChange={setTab} /></div>
-        <button onClick={() => setShowInfoModal(true)} className="px-4 h-11 rounded-lg bg-emerald-500 text-white flex items-center justify-center gap-2 shrink-0 font-black text-sm uppercase tracking-wide" aria-label="Info & Regeln">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9" /><path d="M12 16v-5M12 8h.01" /></svg>
+      <div className="flex items-center gap-2 mb-4 flex-wrap">
+        <button onClick={() => setTab("tabelle")} className={"px-4 py-2 rounded-full text-sm font-bold uppercase tracking-wide " + (tab === "tabelle" ? "bg-emerald-500 text-white" : "bg-zinc-900 text-zinc-400 border border-zinc-800")}>
+          Tabelle
+        </button>
+        <button onClick={() => setTab("spielplan")} className={"px-4 py-2 rounded-full text-sm font-bold uppercase tracking-wide " + (tab === "spielplan" ? "bg-emerald-500 text-white" : "bg-zinc-900 text-zinc-400 border border-zinc-800")}>
+          Spielplan
+        </button>
+        <button onClick={() => setShowInfoModal(true)} className="px-4 py-2 rounded-full text-sm font-bold uppercase tracking-wide bg-zinc-900 text-zinc-400 border border-zinc-800" aria-label="Info & Regeln">
           Info
         </button>
       </div>
