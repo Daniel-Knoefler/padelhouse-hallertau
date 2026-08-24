@@ -979,6 +979,37 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
   const activeLigaId = role === "admin" ? (selectedLigaId || ligen[0]?.id || null) : profile.ligaId;
   const activeLiga = ligen.find((l) => l.id === activeLigaId) || null;
   const teams = activeLiga ? activeLiga.teams : [];
+  const heute = new Date().toISOString().slice(0, 10);
+  const anmeldefristAbgelaufen = !!(activeLiga?.anmeldefrist && heute > activeLiga.anmeldefrist);
+  const meinTeam = activeLiga ? activeLiga.teams.find((t) => t.name === profile.teamName) : null;
+  const [meinTeamNameInput, setMeinTeamNameInput] = useState("");
+  useEffect(() => { setMeinTeamNameInput(profile.teamName || ""); }, [profile.teamName]);
+
+  function meinTeamUmbenennen(e) {
+    e.preventDefault();
+    if (!meinTeamNameInput.trim() || !meinTeam) return;
+    if (teams.some((t) => t.id !== meinTeam.id && t.name.toLowerCase() === meinTeamNameInput.trim().toLowerCase())) {
+      window.alert("Dieser Teamname existiert in dieser Liga schon.");
+      return;
+    }
+    const neuerName = meinTeamNameInput.trim();
+    persistLigen(ligen.map((l) => l.id === activeLigaId ? { ...l, teams: l.teams.map((t) => t.id === meinTeam.id ? { ...t, name: neuerName } : t) } : l));
+    onSaveProfile({ ...profile, teamName: neuerName });
+    pushTeamAktualisieren(neuerName);
+  }
+  function meinTeamLoeschen() {
+    if (!meinTeam) return;
+    const betroffeneSpiele = spiele.filter((sp) => sp.ligaId === activeLigaId && (sp.heimId === meinTeam.id || sp.gastId === meinTeam.id));
+    const hinweis = betroffeneSpiele.length > 0
+      ? `Team "${meinTeam.name}" wirklich löschen? Es gibt bereits ${betroffeneSpiele.length} Begegnung(en) im Spielplan – diese werden mitgelöscht. Du kannst dich danach neu anmelden.`
+      : `Team "${meinTeam.name}" wirklich löschen? Du kannst dich danach neu anmelden.`;
+    if (!window.confirm(hinweis)) return;
+    persistLigen(ligen.map((l) => l.id === activeLigaId ? { ...l, teams: l.teams.filter((t) => t.id !== meinTeam.id) } : l));
+    if (betroffeneSpiele.length > 0) {
+      persistSpiele(spiele.filter((sp) => !(sp.ligaId === activeLigaId && (sp.heimId === meinTeam.id || sp.gastId === meinTeam.id))));
+    }
+    onSaveProfile({ ...profile, ligaId: null, teamName: "", ligaTeilnahme: false, ligaRegistriert: false });
+  }
 
   const [form, setForm] = useState({ spieltag: "", heimId: "", gastId: "", datum: "", ergebnis: "", bestaetigt: false });
   const [fristInput, setFristInput] = useState("");
@@ -1272,6 +1303,18 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
           <div className="text-emerald-500 text-xs uppercase tracking-wide font-bold">{activeLiga.name}</div>
           {activeLiga.anmeldefrist && <div className="text-zinc-500 text-xs mt-1">Anmeldefrist war der {activeLiga.anmeldefrist}</div>}
           {activeLiga.teilnahmegebuehr && <div className="text-zinc-500 text-xs mt-1">Teilnahmegebühr: {activeLiga.teilnahmegebuehr}</div>}
+        </div>
+      )}
+
+      {role !== "admin" && meinTeam && !anmeldefristAbgelaufen && (
+        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 mb-4">
+          <div className="text-xs text-zinc-500 uppercase tracking-wide font-bold mb-2">Mein Team verwalten</div>
+          <p className="text-zinc-500 text-xs mb-3">Solange die Anmeldefrist noch nicht abgelaufen ist, kannst du deinen Teamnamen ändern oder das Team löschen und dich neu anmelden.</p>
+          <form onSubmit={meinTeamUmbenennen} className="flex gap-2 mb-2">
+            <input className={inputCls} value={meinTeamNameInput} onChange={(e) => setMeinTeamNameInput(e.target.value)} />
+            <button type="submit" className="px-4 rounded-lg bg-emerald-500 text-white text-sm font-bold whitespace-nowrap">Speichern</button>
+          </form>
+          <button onClick={meinTeamLoeschen} className="w-full py-2 rounded-lg bg-red-950 text-red-300 text-xs font-bold uppercase tracking-wide">Team löschen & neu anmelden</button>
         </div>
       )}
 
