@@ -1340,6 +1340,15 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
           <button onClick={meinTeamLoeschen} className="w-full py-2 rounded-lg bg-red-950 text-red-300 text-xs font-bold uppercase tracking-wide">Team löschen & neu anmelden</button>
         </div>
       )}
+      {role !== "admin" && !meinTeam && (
+        <div className="bg-zinc-900 border border-red-900 rounded-lg p-4 mb-4">
+          <div className="text-xs text-red-400 uppercase tracking-wide font-bold mb-2">Team nicht gefunden</div>
+          <p className="text-zinc-400 text-xs mb-3">Dein Profil ist als angemeldet markiert, dein Team existiert aber nicht mehr in dieser Liga (z. B. weil es gelöscht wurde). Setz deine Anmeldung zurück, um dich neu zu registrieren.</p>
+          <button onClick={() => onSaveProfile({ ...profile, ligaId: null, teamName: "", ligaTeilnahme: false, ligaRegistriert: false })} className="w-full py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">
+            Anmeldung zurücksetzen
+          </button>
+        </div>
+      )}
 
       <div className="flex items-center gap-2 mb-4 flex-wrap">
         <button onClick={() => setTab("tabelle")} className={"px-4 py-2 rounded-full text-sm font-bold uppercase tracking-wide " + (tab === "tabelle" ? "bg-emerald-500 text-white" : "bg-zinc-900 text-zinc-400 border border-zinc-800")}>
