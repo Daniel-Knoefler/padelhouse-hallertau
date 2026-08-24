@@ -697,7 +697,7 @@ export default function PadelhouseApp() {
 
           <a href={PLAYTOMIC_URL} target="_blank" rel="noopener noreferrer"
             className="mt-4 flex items-center justify-center gap-3 py-4 rounded-2xl text-white font-black uppercase tracking-wide text-sm shadow-lg active:opacity-90"
-            style={{ background: "linear-gradient(135deg, #001C5A 0%, #6BBAEF 100%)", border: "2px solid #D6964A" }}>
+            style={{ background: "linear-gradient(135deg, #000000 0%, #D6964A 100%)", border: "2px solid #FFFFFF" }}>
             <img src={PLAYTOMIC_LOGO_URI} alt="" className="w-7 h-7 rounded-md shrink-0" />
             Platz buchen über Playtomic
             <img src={PLAYTOMIC_LOGO_URI} alt="" className="w-7 h-7 rounded-md shrink-0" />
@@ -876,6 +876,7 @@ function LigaAnmeldungForm({ ligen, profile, onCreateTeam, onSaveProfile }) {
   const alleLigenGesperrt = ligen.length === 0 || ligen.every(istGesperrt);
   const gewaehlteLigaObj = ligen.find((l) => l.id === ligaId);
   const bestehendeTeams = gewaehlteLigaObj?.teams || [];
+  const istEinzel = gewaehlteLigaObj?.modus === "einzel";
 
   function submit(e) {
     e.preventDefault();
@@ -883,10 +884,10 @@ function LigaAnmeldungForm({ ligen, profile, onCreateTeam, onSaveProfile }) {
     const gewaehlteLiga = ligen.find((l) => l.id === ligaId);
     if (gewaehlteLiga?.gesperrt) return setError(`Die Anmeldung für ${gewaehlteLiga.name} wurde vom Betreiber gesperrt.`);
     if (gewaehlteLiga?.anmeldefrist && heute > gewaehlteLiga.anmeldefrist) return setError(`Die Anmeldefrist für ${gewaehlteLiga.name} ist am ${gewaehlteLiga.anmeldefrist} abgelaufen.`);
-    if (teamModus === "neu") {
-      if (!teamName.trim()) return setError("Bitte einen Teamnamen eingeben.");
+    if (teamModus === "neu" || istEinzel) {
+      if (!teamName.trim()) return setError(istEinzel ? "Bitte deinen Namen eingeben." : "Bitte einen Teamnamen eingeben.");
       if (bestehendeTeams.some((t) => t.name.toLowerCase() === teamName.trim().toLowerCase())) {
-        return setError("Dieser Teamname existiert in dieser Liga schon. Wähle stattdessen \"Team beitreten\".");
+        return setError(istEinzel ? "Dieser Name ist in dieser Liga schon vergeben." : "Dieser Teamname existiert in dieser Liga schon. Wähle stattdessen \"Team beitreten\".");
       }
       setError("");
       onCreateTeam(ligaId, teamName.trim());
@@ -915,10 +916,10 @@ function LigaAnmeldungForm({ ligen, profile, onCreateTeam, onSaveProfile }) {
       <p className="text-zinc-500 text-xs mb-4">Diese Anmeldung ist einmalig und kann danach nicht mehr selbst geändert werden.</p>
       <form onSubmit={submit} className="space-y-3">
         <Field label="Liga">
-          <select className={inputCls} value={ligaId} onChange={(e) => { setLigaId(e.target.value); setTeamName(""); }}>
+          <select className={inputCls} value={ligaId} onChange={(e) => { setLigaId(e.target.value); setTeamName(""); setTeamModus("neu"); }}>
             {ligen.map((l) => (
               <option key={l.id} value={l.id} disabled={istGesperrt(l)}>
-                {l.name}{l.gesperrt ? " (Anmeldung gesperrt)" : l.anmeldefrist && heute > l.anmeldefrist ? " (Frist abgelaufen)" : l.anmeldefrist ? ` (Anmeldung bis ${l.anmeldefrist})` : ""}
+                {l.name} ({l.modus === "einzel" ? "Einzel" : "Doppel"}){l.gesperrt ? " – Anmeldung gesperrt" : l.anmeldefrist && heute > l.anmeldefrist ? " – Frist abgelaufen" : l.anmeldefrist ? ` – Anmeldung bis ${l.anmeldefrist}` : ""}
               </option>
             ))}
           </select>
@@ -926,17 +927,23 @@ function LigaAnmeldungForm({ ligen, profile, onCreateTeam, onSaveProfile }) {
         {gewaehlteLigaObj?.teilnahmegebuehr && (
           <p className="text-emerald-400 text-xs">Einmalige Teilnahmegebühr: {gewaehlteLigaObj.teilnahmegebuehr}</p>
         )}
-        <div className="flex gap-2">
-          <button type="button" onClick={() => { setTeamModus("neu"); setTeamName(""); setError(""); }}
-            className={"flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wide " + (teamModus === "neu" ? "bg-emerald-500 text-white" : "bg-zinc-800 text-zinc-400")}>
-            Neues Team anlegen
-          </button>
-          <button type="button" onClick={() => { setTeamModus("beitreten"); setTeamName(bestehendeTeams[0]?.name || ""); setError(""); }}
-            className={"flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wide " + (teamModus === "beitreten" ? "bg-emerald-500 text-white" : "bg-zinc-800 text-zinc-400")}>
-            Team beitreten
-          </button>
-        </div>
-        {teamModus === "neu" ? (
+        {!istEinzel && (
+          <div className="flex gap-2">
+            <button type="button" onClick={() => { setTeamModus("neu"); setTeamName(""); setError(""); }}
+              className={"flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wide " + (teamModus === "neu" ? "bg-emerald-500 text-white" : "bg-zinc-800 text-zinc-400")}>
+              Neues Team anlegen
+            </button>
+            <button type="button" onClick={() => { setTeamModus("beitreten"); setTeamName(bestehendeTeams[0]?.name || ""); setError(""); }}
+              className={"flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wide " + (teamModus === "beitreten" ? "bg-emerald-500 text-white" : "bg-zinc-800 text-zinc-400")}>
+              Team beitreten
+            </button>
+          </div>
+        )}
+        {istEinzel ? (
+          <Field label="Dein Name in der Liga">
+            <input className={inputCls} value={teamName} onChange={(e) => setTeamName(e.target.value)} placeholder="z. B. Max Mustermann" />
+          </Field>
+        ) : teamModus === "neu" ? (
           <Field label="Teamname (du wirst Spielführer)">
             <input className={inputCls} value={teamName} onChange={(e) => setTeamName(e.target.value)} placeholder="z. B. Netzhüter" />
           </Field>
@@ -964,6 +971,7 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
   const [selectedLigaId, setSelectedLigaId] = useState(null);
   const [showLigaForm, setShowLigaForm] = useState(false);
   const [ligaNameInput, setLigaNameInput] = useState("");
+  const [ligaModusInput, setLigaModusInput] = useState("doppel");
   const [teamNameInput, setTeamNameInput] = useState("");
   const [teamDetailId, setTeamDetailId] = useState(null);
   const [playerForm, setPlayerForm] = useState({ name: "", email: "", playtomicName: "" });
@@ -976,6 +984,7 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
   const [fristInput, setFristInput] = useState("");
   const [gebuehrInput, setGebuehrInput] = useState("");
   const [zeitraumInput, setZeitraumInput] = useState("");
+  const [ligaNameEditInput, setLigaNameEditInput] = useState("");
   const [infoTextInput, setInfoTextInput] = useState("");
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [teamFilter, setTeamFilter] = useState("alle");
@@ -994,7 +1003,7 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
   }, [ligaSpiele]);
 
   useEffect(() => {
-    if (activeLiga) { setFristInput(activeLiga.anmeldefrist || ""); setGebuehrInput(activeLiga.teilnahmegebuehr || ""); setZeitraumInput(activeLiga.zeitraum || ""); setInfoTextInput(activeLiga.infoText || ""); }
+    if (activeLiga) { setFristInput(activeLiga.anmeldefrist || ""); setGebuehrInput(activeLiga.teilnahmegebuehr || ""); setZeitraumInput(activeLiga.zeitraum || ""); setInfoTextInput(activeLiga.infoText || ""); setLigaNameEditInput(activeLiga.name || ""); }
   }, [activeLigaId]);
 
   useEffect(() => {
@@ -1019,12 +1028,18 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
             <form onSubmit={(e) => {
               e.preventDefault();
               if (!ligaNameInput.trim()) return;
-              const neu = { id: "liga-" + Date.now(), name: ligaNameInput, teams: [], anmeldefrist: null, gesperrt: false, teilnahmegebuehr: "" };
+              const neu = { id: "liga-" + Date.now(), name: ligaNameInput, modus: ligaModusInput, teams: [], anmeldefrist: null, gesperrt: false, teilnahmegebuehr: "" };
               persistLigen([...ligen, neu]);
               setSelectedLigaId(neu.id);
-              setLigaNameInput(""); setShowLigaForm(false);
+              setLigaNameInput(""); setLigaModusInput("doppel"); setShowLigaForm(false);
             }} className="space-y-3">
               <Field label="Name der Liga"><input className={inputCls} value={ligaNameInput} onChange={(e) => setLigaNameInput(e.target.value)} placeholder="z. B. Liga 2 (Fortgeschritten)" /></Field>
+              <Field label="Spielmodus">
+                <select className={inputCls} value={ligaModusInput} onChange={(e) => setLigaModusInput(e.target.value)}>
+                  <option value="doppel">Doppel (2 vs 2)</option>
+                  <option value="einzel">Einzel (1 vs 1)</option>
+                </select>
+              </Field>
               <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">Erstellen</button>
             </form>
           </Modal>
@@ -1094,6 +1109,11 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
   }
   function saveZeitraum() {
     const next = ligen.map((l) => l.id === activeLigaId ? { ...l, zeitraum: zeitraumInput } : l);
+    persistLigen(next);
+  }
+  function saveLigaName() {
+    if (!ligaNameEditInput.trim()) return;
+    const next = ligen.map((l) => l.id === activeLigaId ? { ...l, name: ligaNameEditInput.trim() } : l);
     persistLigen(next);
   }
   function saveInfoText() {
@@ -1217,9 +1237,14 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
         <div className="space-y-2 mb-4">
           <div className="flex gap-2">
             <select className={inputCls} value={activeLigaId || ""} onChange={(e) => { setSelectedLigaId(e.target.value); const l = ligen.find((x) => x.id === e.target.value); setFristInput(l?.anmeldefrist || ""); setGebuehrInput(l?.teilnahmegebuehr || ""); }}>
-              {ligen.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+              {ligen.map((l) => <option key={l.id} value={l.id}>{l.name} ({l.modus === "einzel" ? "Einzel" : "Doppel"})</option>)}
             </select>
             <button onClick={() => setShowLigaForm(true)} className="px-4 rounded-lg bg-zinc-800 text-emerald-400 text-sm font-bold whitespace-nowrap">+ Liga</button>
+          </div>
+          <div className="flex gap-2 items-center">
+            <span className="text-zinc-500 text-xs whitespace-nowrap">Name:</span>
+            <input className={inputCls} value={ligaNameEditInput} onChange={(e) => setLigaNameEditInput(e.target.value)} />
+            <button onClick={saveLigaName} className="px-4 rounded-lg bg-zinc-800 text-emerald-400 text-sm font-bold whitespace-nowrap">Speichern</button>
           </div>
           <div className="flex gap-2 items-center">
             <span className="text-zinc-500 text-xs whitespace-nowrap">Anmeldefrist:</span>
@@ -1256,7 +1281,7 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9" /><path d="M12 16v-5M12 8h.01" /></svg>
         </button>
       </div>
-      <div className="text-zinc-500 text-xs mb-4">{activeLiga?.zeitraum || "Zeitraum noch nicht festgelegt"} · Tabellenerster nach Saisonende ist Meister (Hin- und Rückspiel)</div>
+      <div className="text-zinc-500 text-xs mb-4">{activeLiga?.modus === "einzel" ? "Einzel (1 vs 1)" : "Doppel (2 vs 2)"} · {activeLiga?.zeitraum || "Zeitraum noch nicht festgelegt"} · Tabellenerster nach Saisonende ist Meister (Hin- und Rückspiel)</div>
 
       {showInfoModal && (
         <Modal title="Info & Regeln" onClose={() => setShowInfoModal(false)}>
@@ -1475,12 +1500,18 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
           <form onSubmit={(e) => {
             e.preventDefault();
             if (!ligaNameInput.trim()) return;
-            const neu = { id: "liga-" + Date.now(), name: ligaNameInput, teams: [], anmeldefrist: null, gesperrt: false, teilnahmegebuehr: "" };
+            const neu = { id: "liga-" + Date.now(), name: ligaNameInput, modus: ligaModusInput, teams: [], anmeldefrist: null, gesperrt: false, teilnahmegebuehr: "" };
             persistLigen([...ligen, neu]);
             setSelectedLigaId(neu.id);
-            setLigaNameInput(""); setShowLigaForm(false);
+            setLigaNameInput(""); setLigaModusInput("doppel"); setShowLigaForm(false);
           }} className="space-y-3">
             <Field label="Name der Liga"><input className={inputCls} value={ligaNameInput} onChange={(e) => setLigaNameInput(e.target.value)} placeholder="z. B. Liga 2 (Fortgeschritten)" /></Field>
+            <Field label="Spielmodus">
+              <select className={inputCls} value={ligaModusInput} onChange={(e) => setLigaModusInput(e.target.value)}>
+                <option value="doppel">Doppel (2 vs 2)</option>
+                <option value="einzel">Einzel (1 vs 1)</option>
+              </select>
+            </Field>
             <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">Erstellen</button>
           </form>
         </Modal>
