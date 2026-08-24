@@ -1277,8 +1277,9 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
 
       <div className="flex items-center gap-2 mb-4">
         <div className="flex-1"><SubTabs tabs={[{ value: "tabelle", label: "Tabelle" }, { value: "spielplan", label: "Spielplan" }]} active={tab} onChange={setTab} /></div>
-        <button onClick={() => setShowInfoModal(true)} className="w-8 h-8 rounded-full bg-zinc-800 text-emerald-400 flex items-center justify-center shrink-0" aria-label="Info & Regeln">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9" /><path d="M12 16v-5M12 8h.01" /></svg>
+        <button onClick={() => setShowInfoModal(true)} className="px-4 h-11 rounded-lg bg-emerald-500 text-white flex items-center justify-center gap-2 shrink-0 font-black text-sm uppercase tracking-wide" aria-label="Info & Regeln">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9" /><path d="M12 16v-5M12 8h.01" /></svg>
+          Info
         </button>
       </div>
       <div className="text-zinc-500 text-xs mb-4">{activeLiga?.modus === "einzel" ? "Einzel (1 vs 1)" : "Doppel (2 vs 2)"} · {activeLiga?.zeitraum || "Zeitraum noch nicht festgelegt"} · Tabellenerster nach Saisonende ist Meister (Hin- und Rückspiel)</div>
