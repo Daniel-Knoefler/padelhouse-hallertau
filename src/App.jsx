@@ -2074,13 +2074,15 @@ function BuchungView({ anfragen, onAnfragen, turniere, onTurniere, events, onEve
   const [waLink, setWaLink] = useState(null);
   const [preisInput, setPreisInput] = useState(preisProStunde || "");
 
-  const [eventForm, setEventForm] = useState({ name: "", email: "", personen: "" });
+  const [eventForm, setEventForm] = useState({ name: "", email: "", personen: "", zahlung: "bar" });
   const [eventTarget, setEventTarget] = useState(null);
   const [peForm, setPeForm] = useState({ art: "", name: "", email: "", telefon: "", datum: "", personen: "", nachricht: "" });
   const [bmForm, setBmForm] = useState({ name: "", email: "", datum: "", uhrzeit: "", zahlung: "bar" });
-  const [turnierForm, setTurnierForm] = useState({ name: "", format: TURNIER_FORMATE[0], datum: "" });
+  const [turnierForm, setTurnierForm] = useState({ name: "", format: TURNIER_FORMATE[0], datum: "", playtomicLink: "" });
+  const [turnierTeilnehmerForm, setTurnierTeilnehmerForm] = useState({ name: "", email: "", personen: "", zahlung: "bar" });
+  const [turnierTarget, setTurnierTarget] = useState(null);
   const [showTurnierForm, setShowTurnierForm] = useState(false);
-  const [neuesEventForm, setNeuesEventForm] = useState({ titel: "", datum: "", beschreibung: "" });
+  const [neuesEventForm, setNeuesEventForm] = useState({ titel: "", datum: "", beschreibung: "", playtomicLink: "" });
   const [showEventForm, setShowEventForm] = useState(false);
 
   function savePreis() {
@@ -2092,10 +2094,12 @@ function BuchungView({ anfragen, onAnfragen, turniere, onTurniere, events, onEve
     if (!eventForm.name.trim() || !eventForm.email.trim() || !eventForm.personen) return;
     onAnfragen([...anfragen, { id: "a-" + Date.now(), type: "event", eventId: eventTarget, ...eventForm }]);
     const evName = events.find((ev) => ev.id === eventTarget)?.titel || "Veranstaltung";
-    pushAdminEmailSenden(`Neue Event-Anmeldung: ${evName}`, `Name: ${eventForm.name}\nE-Mail: ${eventForm.email}\nPersonen: ${eventForm.personen}`);
-    setConfirm("Anmeldung für die Veranstaltung ist eingegangen.");
-    setMailLink(null); setWaLink(null);
-    setEventForm({ name: "", email: "", personen: "" }); setEventTarget(null);
+    const text = `Neue Event-Anmeldung: ${evName}\nName: ${eventForm.name}\nE-Mail: ${eventForm.email}\nPersonen: ${eventForm.personen}\nZahlungsart: ${zahlungsartText(eventForm.zahlung)}`;
+    pushAdminEmailSenden(`Neue Event-Anmeldung: ${evName}`, text);
+    setConfirm("Anmeldung für die Veranstaltung ist eingegangen. Du kannst sie zusätzlich per E-Mail oder WhatsApp an den Betreiber schicken.");
+    setMailLink(mailtoLink(`Event-Anmeldung: ${evName}`, text));
+    setWaLink(whatsappLink(text));
+    setEventForm({ name: "", email: "", personen: "", zahlung: "bar" }); setEventTarget(null);
   }
   function sendPrivatevent(e) {
     e.preventDefault();
@@ -2134,8 +2138,20 @@ function BuchungView({ anfragen, onAnfragen, turniere, onTurniere, events, onEve
     if (!turnierForm.name.trim() || !turnierForm.datum) return;
     onTurniere([...turniere, { id: "tu-" + Date.now(), ...turnierForm }]);
     pushBenachrichtigungSenden("Neues Turnier: " + turnierForm.name, `${turnierForm.format} · ${turnierForm.datum}`, "/?view=buchung");
-    setTurnierForm({ name: "", format: TURNIER_FORMATE[0], datum: "" });
+    setTurnierForm({ name: "", format: TURNIER_FORMATE[0], datum: "", playtomicLink: "" });
     setShowTurnierForm(false);
+  }
+  function bookTurnier(e) {
+    e.preventDefault();
+    if (!turnierTeilnehmerForm.name.trim() || !turnierTeilnehmerForm.email.trim() || !turnierTeilnehmerForm.personen) return;
+    onAnfragen([...anfragen, { id: "a-" + Date.now(), type: "turnier", turnierId: turnierTarget, ...turnierTeilnehmerForm }]);
+    const tName = turniere.find((t) => t.id === turnierTarget)?.name || "Turnier";
+    const text = `Neue Turnier-Anmeldung: ${tName}\nName: ${turnierTeilnehmerForm.name}\nE-Mail: ${turnierTeilnehmerForm.email}\nPersonen: ${turnierTeilnehmerForm.personen}\nZahlungsart: ${zahlungsartText(turnierTeilnehmerForm.zahlung)}`;
+    pushAdminEmailSenden(`Neue Turnier-Anmeldung: ${tName}`, text);
+    setConfirm("Anmeldung für das Turnier ist eingegangen. Du kannst sie zusätzlich per E-Mail oder WhatsApp an den Betreiber schicken.");
+    setMailLink(mailtoLink(`Turnier-Anmeldung: ${tName}`, text));
+    setWaLink(whatsappLink(text));
+    setTurnierTeilnehmerForm({ name: "", email: "", personen: "", zahlung: "bar" }); setTurnierTarget(null);
   }
   function addEvent(e) {
     e.preventDefault();
@@ -2193,12 +2209,21 @@ function BuchungView({ anfragen, onAnfragen, turniere, onTurniere, events, onEve
               </div>
               <div className="text-zinc-500 text-xs mt-1">{ev.datum}</div>
               <div className="text-zinc-400 text-sm mt-1">{ev.beschreibung}</div>
+              {ev.playtomicLink && (
+                <a href={ev.playtomicLink} target="_blank" rel="noopener noreferrer" className="inline-block mt-2 text-xs font-bold uppercase tracking-wide" style={{ color: "#D6964A" }}>
+                  Zur Ausschreibung auf Playtomic →
+                </a>
+              )}
 
               {eventTarget === ev.id ? (
                 <form onSubmit={bookEvent} className="mt-3 space-y-2">
                   <input className={inputCls} placeholder="Name" value={eventForm.name} onChange={(e) => setEventForm({ ...eventForm, name: e.target.value })} />
                   <input className={inputCls} type="email" placeholder="E-Mail" value={eventForm.email} onChange={(e) => setEventForm({ ...eventForm, email: e.target.value })} />
                   <input className={inputCls} type="number" min="1" placeholder="Personenanzahl" value={eventForm.personen} onChange={(e) => setEventForm({ ...eventForm, personen: e.target.value })} />
+                  <select className={inputCls} value={eventForm.zahlung} onChange={(e) => setEventForm({ ...eventForm, zahlung: e.target.value })}>
+                    <option value="bar">Barzahlung vor Ort</option>
+                    <option value="paypal">Kartenzahlung (PayPal)</option>
+                  </select>
                   <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">Anmelden</button>
                 </form>
               ) : (
@@ -2215,6 +2240,7 @@ function BuchungView({ anfragen, onAnfragen, turniere, onTurniere, events, onEve
             <Field label="Titel"><input className={inputCls} value={neuesEventForm.titel} onChange={(e) => setNeuesEventForm({ ...neuesEventForm, titel: e.target.value })} placeholder="z. B. Sommerfest im Padelhouse" /></Field>
             <Field label="Datum"><input className={inputCls} type="date" value={neuesEventForm.datum} onChange={(e) => setNeuesEventForm({ ...neuesEventForm, datum: e.target.value })} /></Field>
             <Field label="Beschreibung"><input className={inputCls} value={neuesEventForm.beschreibung} onChange={(e) => setNeuesEventForm({ ...neuesEventForm, beschreibung: e.target.value })} placeholder="kurze Beschreibung" /></Field>
+            <Field label="Playtomic-Link (optional)"><input className={inputCls} value={neuesEventForm.playtomicLink} onChange={(e) => setNeuesEventForm({ ...neuesEventForm, playtomicLink: e.target.value })} placeholder="falls über Playtomic ausgeschrieben" /></Field>
             <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">Anlegen & alle benachrichtigen</button>
           </form>
         </Modal>
@@ -2282,6 +2308,25 @@ function BuchungView({ anfragen, onAnfragen, turniere, onTurniere, events, onEve
                   <div className="text-white font-bold">{t.name}</div>
                   <div className="text-emerald-500 text-xs uppercase tracking-wide mt-1">{t.format}</div>
                   <div className="text-zinc-500 text-xs mt-1">{t.datum}</div>
+                  {t.playtomicLink && (
+                    <a href={t.playtomicLink} target="_blank" rel="noopener noreferrer" className="inline-block mt-2 text-xs font-bold uppercase tracking-wide" style={{ color: "#D6964A" }}>
+                      Zur Ausschreibung auf Playtomic →
+                    </a>
+                  )}
+                  {turnierTarget === t.id ? (
+                    <form onSubmit={bookTurnier} className="mt-3 space-y-2">
+                      <input className={inputCls} placeholder="Name" value={turnierTeilnehmerForm.name} onChange={(e) => setTurnierTeilnehmerForm({ ...turnierTeilnehmerForm, name: e.target.value })} />
+                      <input className={inputCls} type="email" placeholder="E-Mail" value={turnierTeilnehmerForm.email} onChange={(e) => setTurnierTeilnehmerForm({ ...turnierTeilnehmerForm, email: e.target.value })} />
+                      <input className={inputCls} type="number" min="1" placeholder="Personenanzahl" value={turnierTeilnehmerForm.personen} onChange={(e) => setTurnierTeilnehmerForm({ ...turnierTeilnehmerForm, personen: e.target.value })} />
+                      <select className={inputCls} value={turnierTeilnehmerForm.zahlung} onChange={(e) => setTurnierTeilnehmerForm({ ...turnierTeilnehmerForm, zahlung: e.target.value })}>
+                        <option value="bar">Barzahlung vor Ort</option>
+                        <option value="paypal">Kartenzahlung (PayPal)</option>
+                      </select>
+                      <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">Anmelden</button>
+                    </form>
+                  ) : (
+                    <button onClick={() => setTurnierTarget(t.id)} className="mt-3 text-xs text-emerald-400 uppercase tracking-wide block">Anmelden</button>
+                  )}
                 </div>
               ))}
             </div>
@@ -2296,6 +2341,7 @@ function BuchungView({ anfragen, onAnfragen, turniere, onTurniere, events, onEve
                   </select>
                 </Field>
                 <Field label="Datum"><input className={inputCls} type="date" value={turnierForm.datum} onChange={(e) => setTurnierForm({ ...turnierForm, datum: e.target.value })} /></Field>
+                <Field label="Playtomic-Link (optional)"><input className={inputCls} value={turnierForm.playtomicLink} onChange={(e) => setTurnierForm({ ...turnierForm, playtomicLink: e.target.value })} placeholder="falls über Playtomic ausgeschrieben" /></Field>
                 <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">Erstellen</button>
               </form>
             </Modal>
