@@ -866,7 +866,9 @@ function ProfilView({ profile, onSave, role, onAdminLogout }) {
 }
 
 function LigaAnmeldungForm({ ligen, profile, onCreateTeam, onSaveProfile }) {
-  const [ligaId, setLigaId] = useState(ligen.find((l) => !l.gesperrt)?.id || ligen[0]?.id || "");
+  const [modusFilter, setModusFilter] = useState("doppel");
+  const passendeLigen = ligen.filter((l) => (l.modus === "einzel" ? "einzel" : "doppel") === modusFilter);
+  const [ligaId, setLigaId] = useState(passendeLigen.find((l) => !l.gesperrt)?.id || passendeLigen[0]?.id || "");
   const [teamModus, setTeamModus] = useState("neu");
   const [teamName, setTeamName] = useState("");
   const [error, setError] = useState("");
@@ -877,6 +879,13 @@ function LigaAnmeldungForm({ ligen, profile, onCreateTeam, onSaveProfile }) {
   const gewaehlteLigaObj = ligen.find((l) => l.id === ligaId);
   const bestehendeTeams = gewaehlteLigaObj?.teams || [];
   const istEinzel = gewaehlteLigaObj?.modus === "einzel";
+
+  function modusWechseln(neuerModus) {
+    setModusFilter(neuerModus);
+    const neuePassendeLigen = ligen.filter((l) => (l.modus === "einzel" ? "einzel" : "doppel") === neuerModus);
+    setLigaId(neuePassendeLigen.find((l) => !istGesperrt(l))?.id || neuePassendeLigen[0]?.id || "");
+    setTeamName(""); setTeamModus("neu"); setError("");
+  }
 
   function submit(e) {
     e.preventDefault();
@@ -915,15 +924,29 @@ function LigaAnmeldungForm({ ligen, profile, onCreateTeam, onSaveProfile }) {
       <div className="text-white font-black uppercase tracking-wide mb-1">Liga-Anmeldung</div>
       <p className="text-zinc-500 text-xs mb-4">Diese Anmeldung ist einmalig und kann danach nicht mehr selbst geändert werden.</p>
       <form onSubmit={submit} className="space-y-3">
-        <Field label="Liga">
-          <select className={inputCls} value={ligaId} onChange={(e) => { setLigaId(e.target.value); setTeamName(""); setTeamModus("neu"); }}>
-            {ligen.map((l) => (
-              <option key={l.id} value={l.id} disabled={istGesperrt(l)}>
-                {l.name} ({l.modus === "einzel" ? "Einzel" : "Doppel"}){l.gesperrt ? " – Anmeldung gesperrt" : l.anmeldefrist && heute > l.anmeldefrist ? " – Frist abgelaufen" : l.anmeldefrist ? ` – Anmeldung bis ${l.anmeldefrist}` : ""}
-              </option>
-            ))}
-          </select>
-        </Field>
+        <div className="flex gap-2">
+          <button type="button" onClick={() => modusWechseln("doppel")}
+            className={"flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wide " + (modusFilter === "doppel" ? "bg-emerald-500 text-white" : "bg-zinc-800 text-zinc-400")}>
+            Doppel
+          </button>
+          <button type="button" onClick={() => modusWechseln("einzel")}
+            className={"flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wide " + (modusFilter === "einzel" ? "bg-emerald-500 text-white" : "bg-zinc-800 text-zinc-400")}>
+            Einzel
+          </button>
+        </div>
+        {passendeLigen.length === 0 ? (
+          <p className="text-zinc-500 text-sm">Aktuell keine {modusFilter === "einzel" ? "Einzel" : "Doppel"}-Liga verfügbar.</p>
+        ) : (
+          <Field label="Liga">
+            <select className={inputCls} value={ligaId} onChange={(e) => { setLigaId(e.target.value); setTeamName(""); setTeamModus("neu"); }}>
+              {passendeLigen.map((l) => (
+                <option key={l.id} value={l.id} disabled={istGesperrt(l)}>
+                  {l.name}{l.gesperrt ? " – Anmeldung gesperrt" : l.anmeldefrist && heute > l.anmeldefrist ? " – Frist abgelaufen" : l.anmeldefrist ? ` – Anmeldung bis ${l.anmeldefrist}` : ""}
+                </option>
+              ))}
+            </select>
+          </Field>
+        )}
         {gewaehlteLigaObj?.teilnahmegebuehr && (
           <p className="text-emerald-400 text-xs">Einmalige Teilnahmegebühr: {gewaehlteLigaObj.teilnahmegebuehr}</p>
         )}
