@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, Component } from "react";
 
 const LIGEN_SEED = [
   {
@@ -335,7 +335,7 @@ function Modal({ title, onClose, children }) {
   );
 }
 
-export default function PadelhouseApp() {
+function PadelhouseApp() {
   const [role, setRole] = useState("gast");
   const [view, setView] = useState(() => {
     if (typeof window === "undefined") return "home";
@@ -1186,6 +1186,16 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
     const next = ligen.map((l) => l.id === activeLigaId ? { ...l, gesperrt: !l.gesperrt } : l);
     persistLigen(next);
   }
+  function ligaLoeschen() {
+    if (!activeLiga) return;
+    const anzahlSpiele = spiele.filter((sp) => sp.ligaId === activeLigaId).length;
+    const hinweis = `Liga "${activeLiga.name}" wirklich komplett löschen? ${activeLiga.teams.length} Team(s) und ${anzahlSpiele} Begegnung(en) werden unwiderruflich mitgelöscht.`;
+    if (!window.confirm(hinweis)) return;
+    if (!window.confirm("Bist du dir wirklich sicher? Das kann nicht rückgängig gemacht werden.")) return;
+    persistLigen(ligen.filter((l) => l.id !== activeLigaId));
+    persistSpiele(spiele.filter((sp) => sp.ligaId !== activeLigaId));
+    setSelectedLigaId(null);
+  }
   function generateSpielplan() {
     const bestehende = spiele.filter((sp) => sp.ligaId === activeLigaId).map((sp) => parseInt(sp.spieltag, 10)).filter((n) => !isNaN(n));
     if (bestehende.length > 0) {
@@ -1318,6 +1328,9 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
           <button onClick={toggleGesperrt}
             className={"w-full py-2 rounded-lg text-sm font-bold uppercase tracking-wide " + (activeLiga?.gesperrt ? "bg-red-900 text-red-200" : "bg-zinc-800 text-emerald-400")}>
             {activeLiga?.gesperrt ? "Anmeldung gesperrt – Freigeben" : "Anmeldung für alle Nutzer sperren"}
+          </button>
+          <button onClick={ligaLoeschen} className="w-full py-2 rounded-lg bg-red-950 text-red-300 text-sm font-bold uppercase tracking-wide">
+            Diese Liga komplett löschen
           </button>
         </div>
       )}
@@ -3263,5 +3276,43 @@ function AdminView({ ligenCount, teamsCount, offeneWuensche, goto }) {
         <button onClick={() => goto("wuensche")} className="w-full text-left bg-zinc-900 border border-zinc-800 rounded-lg p-4 text-white text-sm hover:border-emerald-600">Wünsche bearbeiten → Wünsche & Ideen</button>
       </div>
     </div>
+  );
+}
+
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+  componentDidCatch(error, info) {
+    console.error("App-Fehler abgefangen:", error, info);
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="min-h-screen bg-black flex items-center justify-center p-6">
+          <div className="max-w-sm text-center">
+            <div className="text-white font-black text-lg uppercase mb-2">Etwas ist schiefgelaufen</div>
+            <p className="text-zinc-400 text-sm mb-4">Bitte lade die Seite neu. Falls das öfter passiert, mach einen Screenshot von der Fehlermeldung unten und schick sie an den Betreiber.</p>
+            <button onClick={() => window.location.reload()} className="px-5 py-2 rounded-lg bg-emerald-500 text-white font-bold uppercase tracking-wide text-sm mb-4">
+              Neu laden
+            </button>
+            <p className="text-zinc-600 text-xs break-words whitespace-pre-wrap">{String(this.state.error?.message || this.state.error)}</p>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <PadelhouseApp />
+    </ErrorBoundary>
   );
 }
