@@ -2796,12 +2796,14 @@ const FAQ_DATEN = [
   {
     kategorie: "Liga",
     fragen: [
-      { f: "Wie melde ich mein Team für die Liga an?", a: "Tippe einfach auf die Kachel \"Liga\" – dort öffnet sich direkt das Anmeldeformular, solange du noch nicht registriert bist. Wähle deine Liga aus und entweder \"Neues Team anlegen\" (du wirst Spielführer und gibst einen Teamnamen ein) oder \"Team beitreten\" (dein Partner wählt das vom Spielführer bereits angelegte Team aus einer Liste). Achtung: Diese Anmeldung ist einmalig und kann danach nicht mehr selbst geändert werden." },
-      { f: "Was mache ich, wenn die Anmeldefrist abgelaufen ist?", a: "Ist die vom Betreiber gesetzte Anmeldefrist einer Liga vorbei, ist keine Neuanmeldung mehr möglich. Wende dich in dem Fall direkt an den Betreiber." },
-      { f: "Wie trage ich ein Spielergebnis ein?", a: "In der Liga-Kachel unter \"Spielplan\" bei der jeweiligen Begegnung auf \"Bearbeiten\" tippen und das Ergebnis eintragen." },
+      { f: "Wie melde ich mein Team für die Liga an?", a: "Tippe einfach auf die Kachel \"Liga\" – dort öffnet sich direkt das Anmeldeformular, solange du noch nicht registriert bist. Wähle zuerst \"Doppel\" oder \"Einzel\" (nur passende Ligen werden dann angezeigt), dann deine Liga. Bei Doppel-Ligen entweder \"Neues Team anlegen\" (du wirst Spielführer und gibst einen Teamnamen ein) oder \"Team beitreten\" (dein Partner wählt das vom Spielführer bereits angelegte Team aus einer Liste). Bei Einzel-Ligen trägst du direkt deinen eigenen Namen ein." },
+      { f: "Kann ich meinen Teamnamen nachträglich ändern oder das Team löschen?", a: "Ja, solange die Anmeldefrist der Liga noch nicht abgelaufen ist. Im Liga-Bereich erscheint dafür der Kasten \"Mein Team verwalten\" mit Umbenennen- und Löschen-Option. Nach dem Löschen kannst du dich direkt neu anmelden, z. B. für ein anderes Team." },
+      { f: "Was mache ich, wenn die Anmeldefrist abgelaufen ist?", a: "Ist die vom Betreiber gesetzte Anmeldefrist einer Liga vorbei, ist keine Neuanmeldung und keine Änderung am eigenen Team mehr möglich. Wende dich in dem Fall direkt an den Betreiber." },
+      { f: "Wie trage ich ein Spielergebnis ein?", a: "In der Liga-Kachel unter \"Spielplan\" bei der jeweiligen Begegnung auf \"Bearbeiten\" tippen und das Ergebnis eintragen. Das Auswärtsteam bekommt danach eine Push-Benachrichtigung und muss das Ergebnis noch mit einem Tipp bestätigen." },
       { f: "Wie funktionieren Terminvorschläge?", a: "Ist noch kein Termin für ein Spiel bestätigt, kann das Heimteam Terminvorschläge (Datum & Uhrzeit) einreichen. Das Gegnerteam sieht diese und kann einen Vorschlag mit \"Annehmen\" bestätigen." },
       { f: "Kann ich nur die Spiele meines Teams sehen?", a: "Ja, über den Filter \"Filtern nach Team\" im Spielplan – ist bei dir automatisch auf dein eigenes Team voreingestellt." },
       { f: "Wo sehe ich, welche Spieler in einem Team sind?", a: "In der Tabelle auf den (unterstrichenen) Teamnamen tippen – dort stehen Name, E-Mail und Playtomic-Profilname der Spieler." },
+      { f: "Wie wird die Tabelle berechnet?", a: "Sieg 2:0 (Sätze) = 3 Punkte, Sieg 2:1 = 2 Punkte, Niederlage 1:2 = 1 Punkt, Niederlage 0:2 = 0 Punkte. Bei Punktegleichheit entscheidet zuerst die Anzahl Siege, danach die Satzdifferenz." },
     ],
   },
   {
@@ -2823,7 +2825,8 @@ const FAQ_DATEN = [
   {
     kategorie: "Buchung",
     fragen: [
-      { f: "Wie melde ich mich für ein Event an?", a: "Buchung → Events → beim gewünschten Event \"Anmelden\" antippen und Kontaktdaten eintragen." },
+      { f: "Wie melde ich mich für ein Event an?", a: "Buchung → Events → beim gewünschten Event \"Anmelden\" antippen, Kontaktdaten eintragen (Personenanzahl auch als Freitext möglich, z. B. Namen). Nach dem Absenden kannst du die Anmeldung zusätzlich direkt per E-Mail oder WhatsApp an den Betreiber schicken." },
+      { f: "Wie melde ich mich für ein Turnier an?", a: "Buchung → Turniere → beim gewünschten Turnier \"Anmelden\" antippen und Kontaktdaten eintragen. Ist beim Turnier ein Playtomic-Link hinterlegt, kannst du darüber direkt zur offiziellen Ausschreibung springen." },
       { f: "Wie frage ich ein Privatevent (z. B. Geburtstag, Firmenfeier) an?", a: "Buchung → Privatevent → Formular ausfüllen. Nach dem Absenden kannst du die Anfrage direkt per E-Mail oder WhatsApp an den Betreiber schicken." },
       { f: "Wie reserviere ich die Ballmaschine?", a: "Buchung → Ballmaschine → Name, E-Mail, Datum, Uhrzeit und Zahlungsart (bar oder Überweisung) angeben. Der Zahlencode fürs Schloss wird nicht automatisch erzeugt, sondern dir vom Betreiber persönlich vor Terminbeginn mitgeteilt." },
     ],
@@ -2838,7 +2841,7 @@ const FAQ_DATEN = [
     kategorie: "Chat",
     fragen: [
       { f: "Mit wem kann ich chatten?", a: "Es gibt einen 1:1-Chat mit dem Admin-Support und einen offenen Hallen-Chat für alle. Gruppenchats findest du direkt in der jeweiligen Community-Gruppe." },
-      { f: "Wie schalte ich einen Chat stumm?", a: "Auf die Glocke oben rechts bei der jeweiligen Chat-Kachel tippen. Eine durchgestrichene Glocke zeigt: stummgeschaltet." },
+      { f: "Wie schalte ich einen Chat stumm?", a: "Auf die Glocke oben rechts bei der jeweiligen Chat-Kachel tippen. Eine durchgestrichene Glocke zeigt: stummgeschaltet – du bekommst dann auch keine Push-Benachrichtigung mehr dafür, nur die App-interne Markierung entfällt." },
     ],
   },
   {
