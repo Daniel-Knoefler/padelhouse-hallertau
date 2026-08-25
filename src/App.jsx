@@ -430,7 +430,11 @@ function PadelhouseApp() {
 
   async function eintragAusNutzerlisteLoeschen(scopeId, name) {
     if (!window.confirm(`Eintrag "${name}" wirklich entfernen? Das löscht das gespeicherte Profil auf diesem Gerät (Name, E-Mail, Telefon) und zählt auch beim App-Nutzer-Zähler nicht mehr mit.`)) return;
-    await supabase.from("app_storage").delete().eq("scope_id", scopeId).in("storage_key", ["mein-profil", "app-erstbesuch"]);
+    const { error } = await supabase.from("app_storage").delete().eq("scope_id", scopeId).in("storage_key", ["mein-profil", "app-erstbesuch"]);
+    if (error) {
+      window.alert("Löschen fehlgeschlagen: " + error.message);
+      return;
+    }
     setNutzerListe((prev) => prev.filter((n) => n.scopeId !== scopeId));
     setNutzerAnzahl((prev) => (typeof prev === "number" ? Math.max(0, prev - 1) : prev));
   }
@@ -846,7 +850,8 @@ function PadelhouseApp() {
       {view === "community" && (
         <CommunityView news={news} gruppen={gruppen} role={role} profile={profile}
           onNews={(n) => persistCommunity(n, gruppen)} onGruppen={(g) => persistCommunity(news, g)}
-          onMarkRead={markNewsRead} gruppenStatus={gruppenStatus} onGruppenStatus={persistGruppenStatus} />
+          onMarkRead={markNewsRead} gruppenStatus={gruppenStatus} onGruppenStatus={persistGruppenStatus}
+          onZeigeGruppenMitglieder={ladeGruppenMitglieder} />
       )}
 
       {view === "training" && (
@@ -894,7 +899,6 @@ function PadelhouseApp() {
           offeneWuensche={ideen.filter((i) => i.status === "in_pruefung").length}
           nutzerAnzahl={nutzerAnzahl}
           onZeigeNutzerliste={ladeNutzerliste}
-          onZeigeGruppenMitglieder={ladeGruppenMitglieder}
           onResetGruppenZaehler={mitgliederZaehlerZuruecksetzen}
           goto={(v) => setView(v)}
           onAdminLogout={adminAbmelden}
@@ -1841,7 +1845,7 @@ function ChatBubble({ m, eigene, zeigeName, onLoeschen }) {
   );
 }
 
-function CommunityView({ news, gruppen, role, profile, onNews, onGruppen, onMarkRead, gruppenStatus, onGruppenStatus }) {
+function CommunityView({ news, gruppen, role, profile, onNews, onGruppen, onMarkRead, gruppenStatus, onGruppenStatus, onZeigeGruppenMitglieder }) {
   const [tab, setTab] = useState("news");
   const [newsForm, setNewsForm] = useState({ title: "", text: "" });
   const [omGruppe, setOmGruppe] = useState(null);
@@ -1944,6 +1948,11 @@ function CommunityView({ news, gruppen, role, profile, onNews, onGruppen, onMark
           {role === "admin" && (
             <button onClick={() => setShowGruppeForm(true)} className="w-full py-2 rounded-lg bg-emerald-500 text-white font-bold uppercase tracking-wide text-sm">
               Neue Gruppe erstellen
+            </button>
+          )}
+          {role === "admin" && (
+            <button onClick={onZeigeGruppenMitglieder} className="w-full py-2 rounded-lg bg-zinc-800 text-emerald-400 text-sm font-bold uppercase tracking-wide">
+              Gruppen-Mitglieder mit Namen anzeigen
             </button>
           )}
 
@@ -2998,6 +3007,19 @@ const FAQ_DATEN = [
       { f: "Wo sehe ich, ob es etwas Neues gibt?", a: "Kacheln mit neuen Inhalten (Chat, Community, Wünsche & Ideen) zeigen einen grünen Zähler-Badge, der verschwindet, sobald du reinschaust." },
     ],
   },
+  {
+    kategorie: "Rechtliches",
+    fragen: [
+      {
+        f: "Hausordnung",
+        a: "Padelhouse-Hallertau GmbH – Stand: Juli 2026\n• Den Anweisungen der Betreiber ist Folge zu leisten.\n• „Privat gekennzeichnete Bereiche“ sind ausschließlich dem Betreiber zugeordnet.\n• Die Buchung von Courts erfolgt über die Plattform Playtomic. Die zum Zeitpunkt der Buchung angegebenen Preise sind gültig.\n• Die Nutzung der Anlage ist ausschließlich während der gebuchten Zeit erlaubt.\n• Die Buchung besteht aus 2 Spielern (Singlecourt) oder 4 Spielern (Doppelcourt). Zusätzliche Spieler, welche nicht für den Court bezahlt haben, sind nicht gestattet.\n• Mit der Buchung eines Platzes erklärt sich der Kunde mit der Videoüberwachung einverstanden.\n• Die Courts dürfen nur mit geeignetem und sauberen Sportschuhwerk (Non-Marking) betreten werden.\n• Speisen und Getränke sind auf dem Spielfeld nicht gestattet.\n• Das Rauchen in den Hallen und Räumlichkeiten ist strengstens untersagt.\n• Zutritt für Tiere jeglicher Art ist nicht gestattet.\n• Courts, Umkleidekabinen sowie der Loungebereich sind sauber zu halten. Der Müll ist in die dafür vorgesehenen Behälter zu werfen.\n• Spinde sind sauber und ordnungsgemäß zu hinterlassen. Das Vorhängeschloss ist nach Spielende zu entfernen.\n• Ein respektvoller Umgang und Sportsgeist gegenüber Gegnern und Mitspielern stehen im Vordergrund.\n• Beschädigungen oder Verunreinigungen sind dem Betreiber umgehend zu melden.\n• Der Automatenverkauf erfolgt unter Einhaltung der gesetzlichen Bestimmungen, insbesondere unter Durchführung einer Altersverifikation beim Erwerb altersbeschränkter Produkte.\n• Auf dem Gelände herrscht Schrittgeschwindigkeit und es gilt in erster Linie das Gebot der gegenseitigen Rücksichtnahme gemäß § 1 der StVO. Parkverbotsschildern ist Folge zu leisten.",
+      },
+      {
+        f: "Datenschutz",
+        a: "Die Verarbeitung personenbezogener Daten erfolgt gemäß der Datenschutz-Grundverordnung (DSGVO). Die vollständige Datenschutzerklärung ist auf der Website des Betreibers einsehbar.",
+      },
+    ],
+  },
 ];
 
 const SCHLAG_VIDEOS = [
@@ -3252,7 +3274,7 @@ function HilfeView() {
                       <span className="text-white text-sm font-bold">{item.f}</span>
                       <span className="text-emerald-400 text-lg shrink-0">{istOffen ? "–" : "+"}</span>
                     </button>
-                    {istOffen && <div className="px-3 pb-3 text-zinc-400 text-sm">{item.a}</div>}
+                    {istOffen && <div className="px-3 pb-3 text-zinc-400 text-sm whitespace-pre-line">{item.a}</div>}
                   </div>
                 );
               })}
@@ -3411,15 +3433,15 @@ function WuenscheView({ ideen, onSave, role, onMarkRead }) {
   );
 }
 
-function AdminView({ ligenCount, teamsCount, offeneWuensche, nutzerAnzahl, onZeigeNutzerliste, onZeigeGruppenMitglieder, onResetGruppenZaehler, goto, onAdminLogout, versteckteKacheln, onToggleKachel }) {
+function AdminView({ ligenCount, teamsCount, offeneWuensche, nutzerAnzahl, onZeigeNutzerliste, onResetGruppenZaehler, goto, onAdminLogout, versteckteKacheln, onToggleKachel }) {
   return (
     <div>
       <div className="text-white font-black uppercase tracking-wide mb-4">Admin-Überblick</div>
       <div className="grid grid-cols-2 gap-4 mb-3">
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+        <button onClick={onZeigeNutzerliste} className="text-left bg-zinc-900 border border-zinc-800 rounded-lg p-4 hover:border-emerald-600">
           <div className="text-zinc-500 text-xs uppercase">App-Nutzer</div>
           <div className="text-2xl font-black text-emerald-400">{nutzerAnzahl === null ? "…" : nutzerAnzahl}</div>
-        </div>
+        </button>
         <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
           <div className="text-zinc-500 text-xs uppercase">Ligen</div>
           <div className="text-2xl font-black text-emerald-400">{ligenCount}</div>
@@ -3434,12 +3456,6 @@ function AdminView({ ligenCount, teamsCount, offeneWuensche, nutzerAnzahl, onZei
         </div>
       </div>
       <div className="space-y-2 mb-6">
-        <button onClick={onZeigeNutzerliste} className="w-full py-2 rounded-lg bg-zinc-800 text-emerald-400 text-sm font-bold uppercase tracking-wide">
-          Nutzerliste mit Namen anzeigen
-        </button>
-        <button onClick={onZeigeGruppenMitglieder} className="w-full py-2 rounded-lg bg-zinc-800 text-emerald-400 text-sm font-bold uppercase tracking-wide">
-          Gruppen-Mitglieder mit Namen anzeigen
-        </button>
         <button onClick={onResetGruppenZaehler} className="w-full py-2 rounded-lg bg-zinc-800 text-red-300 text-sm font-bold uppercase tracking-wide">
           Mitglieder-Zähler aller Gruppen auf 0 zurücksetzen
         </button>
