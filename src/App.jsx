@@ -284,10 +284,13 @@ function TileIcon({ tileKey }) {
       return null;
   }
 }
-function Tile({ tileKey, onClick, badge, moveMode, onMoveLeft, onMoveRight, disableLeft, disableRight }) {
+function Tile({ tileKey, onClick, badge, moveMode, onMoveLeft, onMoveRight, disableLeft, disableRight, versteckt }) {
   const meta = TILE_META[tileKey];
   return (
-    <div className="relative rounded-xl p-3 min-w-0 border-2 border-white" style={{ background: "#1C5E27" }}>
+    <div className="relative rounded-xl p-3 min-w-0 border-2 border-white" style={{ background: "#1C5E27", opacity: versteckt ? 0.45 : 1 }}>
+      {versteckt && (
+        <span className="absolute -top-1.5 -left-1.5 bg-red-900 text-red-200 text-[9px] font-black rounded-full px-1.5 py-0.5 uppercase">Aus</span>
+      )}
       {badge > 0 && (
         <span className="absolute -top-1.5 -right-1.5 bg-emerald-500 text-white text-xs font-black rounded-full w-5 h-5 flex items-center justify-center">
           {badge}
@@ -357,6 +360,7 @@ function PadelhouseApp() {
   });
   const [moveMode, setMoveMode] = useState(false);
   const [tileOrder, setTileOrder] = useState(TILES_DEFAULT);
+  const [versteckteKacheln, setVersteckteKacheln] = useState([]);
   const [profile, setProfile] = useState({ name: "", email: "", telefon: "", profilname: "", ligaTeilnahme: false, ligaId: null, teamName: "", ligaRegistriert: false });
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinInput, setPinInput] = useState("");
@@ -443,7 +447,7 @@ function PadelhouseApp() {
 
   useEffect(() => {
     async function loadAll() {
-      const [sp, lg, comm, k, anf, tur, ev, vm, ch, cs, id, nrc, irc, bf, gs, kb, bp, fp, ct, mb, gb, prof, order, istAdmin] = await Promise.all([
+      const [sp, lg, comm, k, anf, tur, ev, vm, ch, cs, id, nrc, irc, bf, gs, kb, bp, fp, ct, mb, gb, prof, order, versteckt, istAdmin] = await Promise.all([
         loadKey("liga-spielplan", true, []),
         loadKey("ligen", true, LIGEN_SEED),
         loadKey("community-daten", true, { news: NEWS_SEED, gruppen: GRUPPEN_SEED }),
@@ -467,6 +471,7 @@ function PadelhouseApp() {
         loadKey("benachrichtigungen-gelesen-bis", false, null),
         loadKey("mein-profil", false, { name: "", email: "", telefon: "", profilname: "", ligaTeilnahme: false, ligaId: null, teamName: "", ligaRegistriert: false }),
         loadKey("tile-order", false, TILES_DEFAULT),
+        loadKey("versteckte-kacheln", true, []),
         loadKey("ist-admin", false, false),
       ]);
       setSpiele(sp);
@@ -494,6 +499,7 @@ function PadelhouseApp() {
       benachrichtigungenLaden().then(setBenachrichtigungen);
       setProfile(prof);
       setTileOrder(order);
+      setVersteckteKacheln(versteckt);
       if (istAdmin) setRole("admin");
       setLoading(false);
     }
@@ -501,7 +507,7 @@ function PadelhouseApp() {
   }, []);
 
   async function refreshSharedData() {
-    const [sp, lg, comm, k, tur, ev, ch, id, bp, fp, ct] = await Promise.all([
+    const [sp, lg, comm, k, tur, ev, ch, id, bp, fp, ct, versteckt] = await Promise.all([
       loadKey("liga-spielplan", true, []),
       loadKey("ligen", true, LIGEN_SEED),
       loadKey("community-daten", true, { news: NEWS_SEED, gruppen: GRUPPEN_SEED }),
@@ -513,6 +519,7 @@ function PadelhouseApp() {
       loadKey("ballmaschine-preis", true, ""),
       loadKey("fanshop-produkte", true, FANSHOP_SEED),
       loadKey("courts", true, COURTS_SEED),
+      loadKey("versteckte-kacheln", true, []),
     ]);
     setSpiele(sp);
     setLigen(lg);
@@ -526,6 +533,7 @@ function PadelhouseApp() {
     setBallmaschinePreis(bp);
     setFanshopProdukte(fp);
     setCourts(ct);
+    setVersteckteKacheln(versteckt);
     benachrichtigungenLaden().then(setBenachrichtigungen);
   }
 
@@ -579,6 +587,11 @@ function PadelhouseApp() {
   }
   function persistProfile(next) { setProfile(next); saveKey("mein-profil", false, next); }
   function persistOrder(next) { setTileOrder(next); saveKey("tile-order", false, next); }
+  function persistVersteckteKacheln(next) { setVersteckteKacheln(next); saveKey("versteckte-kacheln", true, next); }
+  function toggleKachelSichtbar(key) {
+    const next = versteckteKacheln.includes(key) ? versteckteKacheln.filter((k) => k !== key) : [...versteckteKacheln, key];
+    persistVersteckteKacheln(next);
+  }
 
   const unreadChat = threads.reduce((sum, t) => {
     const st = chatStatus[t.id];
@@ -600,8 +613,9 @@ function PadelhouseApp() {
     : benachrichtigungen.length;
 
   const visibleTiles = useMemo(() => {
-    return tileOrder.filter((k) => TILES_DEFAULT.includes(k));
-  }, [tileOrder]);
+    const gefiltert = tileOrder.filter((k) => TILES_DEFAULT.includes(k));
+    return role === "admin" ? gefiltert : gefiltert.filter((k) => !versteckteKacheln.includes(k));
+  }, [tileOrder, role, versteckteKacheln]);
 
   function moveTile(key, dir) {
     const idx = tileOrder.indexOf(key);
@@ -700,6 +714,7 @@ function PadelhouseApp() {
                 onClick={() => setView(key)}
                 badge={key === "chat" ? unreadChat : key === "community" ? unreadNews : key === "wuensche" ? unreadIdeen : key === "benachrichtigungen" ? unreadBenachrichtigungen : 0}
                 moveMode={moveMode && key !== "admin"}
+                versteckt={role === "admin" && versteckteKacheln.includes(key)}
                 disableLeft={i === 0}
                 disableRight={i === visibleTiles.length - 1}
                 onMoveLeft={() => moveTile(key, -1)}
@@ -798,6 +813,8 @@ function PadelhouseApp() {
           offeneWuensche={ideen.filter((i) => i.status === "in_pruefung").length}
           goto={(v) => setView(v)}
           onAdminLogout={adminAbmelden}
+          versteckteKacheln={versteckteKacheln}
+          onToggleKachel={toggleKachelSichtbar}
         />
       )}
     </div>
@@ -3259,7 +3276,7 @@ function WuenscheView({ ideen, onSave, role, onMarkRead }) {
   );
 }
 
-function AdminView({ ligenCount, teamsCount, offeneWuensche, goto, onAdminLogout }) {
+function AdminView({ ligenCount, teamsCount, offeneWuensche, goto, onAdminLogout, versteckteKacheln, onToggleKachel }) {
   return (
     <div>
       <div className="text-white font-black uppercase tracking-wide mb-4">Admin-Überblick</div>
@@ -3277,13 +3294,29 @@ function AdminView({ ligenCount, teamsCount, offeneWuensche, goto, onAdminLogout
           <div className="text-2xl font-black text-emerald-400">{offeneWuensche}</div>
         </div>
       </div>
-      <div className="space-y-2">
+      <div className="space-y-2 mb-6">
         <button onClick={() => goto("liga")} className="w-full text-left bg-zinc-900 border border-zinc-800 rounded-lg p-4 text-white text-sm hover:border-emerald-600">Liga erstellen / Teams verwalten → Liga</button>
         <button onClick={() => goto("community")} className="w-full text-left bg-zinc-900 border border-zinc-800 rounded-lg p-4 text-white text-sm hover:border-emerald-600">News posten → Community</button>
         <button onClick={() => goto("buchung")} className="w-full text-left bg-zinc-900 border border-zinc-800 rounded-lg p-4 text-white text-sm hover:border-emerald-600">Turnier erstellen → Buchung</button>
         <button onClick={() => goto("training")} className="w-full text-left bg-zinc-900 border border-zinc-800 rounded-lg p-4 text-white text-sm hover:border-emerald-600">Kurstermin anlegen → Trainingskurse</button>
         <button onClick={() => goto("wuensche")} className="w-full text-left bg-zinc-900 border border-zinc-800 rounded-lg p-4 text-white text-sm hover:border-emerald-600">Wünsche bearbeiten → Wünsche & Ideen</button>
       </div>
+
+      <div className="text-xs text-zinc-500 uppercase tracking-wide font-bold mb-2">Kacheln für Nutzer sichtbar/ausblenden</div>
+      <p className="text-zinc-500 text-xs mb-3">Ausgeblendete Kacheln erscheinen nur noch bei dir als Admin (leicht abgedunkelt erkennbar), normale Nutzer sehen sie gar nicht. Praktisch z. B. für den Fanshop, bis er startbereit ist.</p>
+      <div className="space-y-1.5">
+        {TILES_DEFAULT.map((key) => {
+          const versteckt = versteckteKacheln.includes(key);
+          return (
+            <button key={key} onClick={() => onToggleKachel(key)}
+              className={"w-full flex items-center justify-between rounded-lg px-4 py-2.5 text-sm font-bold " + (versteckt ? "bg-zinc-900 border border-red-900 text-red-300" : "bg-zinc-900 border border-zinc-800 text-white")}>
+              <span>{TILE_META[key]?.label || key}</span>
+              <span className="text-xs uppercase tracking-wide">{versteckt ? "Ausgeblendet" : "Sichtbar"}</span>
+            </button>
+          );
+        })}
+      </div>
+
       <button onClick={onAdminLogout} className="w-full mt-6 py-2 rounded-lg bg-zinc-800 text-zinc-300 text-sm font-bold uppercase tracking-wide">
         Als Admin abmelden
       </button>
