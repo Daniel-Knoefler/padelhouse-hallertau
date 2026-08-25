@@ -435,6 +435,41 @@ function PadelhouseApp() {
     setNutzerAnzahl((prev) => (typeof prev === "number" ? Math.max(0, prev - 1) : prev));
   }
 
+  function mitgliederZaehlerZuruecksetzen() {
+    if (!window.confirm("Alle Mitglieder-Zähler der Gruppen wirklich auf 0 zurücksetzen?")) return;
+    persistCommunity(news, gruppen.map((g) => ({ ...g, mitglieder: 0 })));
+  }
+
+  const [showGruppenMitglieder, setShowGruppenMitglieder] = useState(false);
+  const [gruppenMitgliederListe, setGruppenMitgliederListe] = useState(null);
+
+  async function ladeGruppenMitglieder() {
+    setShowGruppenMitglieder(true);
+    setGruppenMitgliederListe(null);
+    const [statusRes, profilRes] = await Promise.all([
+      supabase.from("app_storage").select("scope_id, value").eq("storage_key", "community-gruppen-status"),
+      supabase.from("app_storage").select("scope_id, value").eq("storage_key", "mein-profil"),
+    ]);
+    const namenNachScope = {};
+    (profilRes.data || []).forEach((row) => {
+      const name = row.value?.name || row.value?.profilname || "";
+      if (name.trim()) namenNachScope[row.scope_id] = name.trim();
+    });
+    const nachGruppe = {};
+    gruppen.forEach((g) => { nachGruppe[g.id] = { name: g.name, mitglieder: [] }; });
+    (statusRes.data || []).forEach((row) => {
+      const name = namenNachScope[row.scope_id];
+      if (!name) return;
+      Object.entries(row.value || {}).forEach(([gruppeId, st]) => {
+        if (st?.beigetreten && nachGruppe[gruppeId]) {
+          nachGruppe[gruppeId].mitglieder.push(name);
+        }
+      });
+    });
+    Object.values(nachGruppe).forEach((g) => g.mitglieder.sort((a, b) => a.localeCompare(b, "de")));
+    setGruppenMitgliederListe(Object.values(nachGruppe));
+  }
+
   useEffect(() => {
     if (view === "admin" && role === "admin") {
       supabase
@@ -859,11 +894,38 @@ function PadelhouseApp() {
           offeneWuensche={ideen.filter((i) => i.status === "in_pruefung").length}
           nutzerAnzahl={nutzerAnzahl}
           onZeigeNutzerliste={ladeNutzerliste}
+          onZeigeGruppenMitglieder={ladeGruppenMitglieder}
+          onResetGruppenZaehler={mitgliederZaehlerZuruecksetzen}
           goto={(v) => setView(v)}
           onAdminLogout={adminAbmelden}
           versteckteKacheln={versteckteKacheln}
           onToggleKachel={toggleKachelSichtbar}
         />
+      )}
+      {showGruppenMitglieder && (
+        <Modal title="Gruppen-Mitglieder" onClose={() => setShowGruppenMitglieder(false)}>
+          {gruppenMitgliederListe === null ? (
+            <p className="text-zinc-500 text-sm">Lädt...</p>
+          ) : (
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+              <p className="text-zinc-500 text-xs">Nur Personen mit hinterlegtem Namen, die aktiv \"Beitreten\" gedrückt haben. Nur intern sichtbar, nicht teilen.</p>
+              {gruppenMitgliederListe.map((g) => (
+                <div key={g.name}>
+                  <div className="text-emerald-500 text-xs uppercase tracking-wide font-bold mb-1.5">{g.name} ({g.mitglieder.length})</div>
+                  {g.mitglieder.length === 0 ? (
+                    <p className="text-zinc-600 text-xs">Noch niemand beigetreten.</p>
+                  ) : (
+                    <div className="space-y-1">
+                      {g.mitglieder.map((name, i) => (
+                        <div key={i} className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-white text-sm">{name}</div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </Modal>
       )}
       {showNutzerliste && (
         <Modal title="Nutzerliste" onClose={() => setShowNutzerliste(false)}>
@@ -3349,7 +3411,7 @@ function WuenscheView({ ideen, onSave, role, onMarkRead }) {
   );
 }
 
-function AdminView({ ligenCount, teamsCount, offeneWuensche, nutzerAnzahl, onZeigeNutzerliste, goto, onAdminLogout, versteckteKacheln, onToggleKachel }) {
+function AdminView({ ligenCount, teamsCount, offeneWuensche, nutzerAnzahl, onZeigeNutzerliste, onZeigeGruppenMitglieder, onResetGruppenZaehler, goto, onAdminLogout, versteckteKacheln, onToggleKachel }) {
   return (
     <div>
       <div className="text-white font-black uppercase tracking-wide mb-4">Admin-Überblick</div>
@@ -3371,9 +3433,17 @@ function AdminView({ ligenCount, teamsCount, offeneWuensche, nutzerAnzahl, onZei
           <div className="text-2xl font-black text-emerald-400">{offeneWuensche}</div>
         </div>
       </div>
-      <button onClick={onZeigeNutzerliste} className="w-full mb-6 py-2 rounded-lg bg-zinc-800 text-emerald-400 text-sm font-bold uppercase tracking-wide">
-        Nutzerliste mit Namen anzeigen
-      </button>
+      <div className="space-y-2 mb-6">
+        <button onClick={onZeigeNutzerliste} className="w-full py-2 rounded-lg bg-zinc-800 text-emerald-400 text-sm font-bold uppercase tracking-wide">
+          Nutzerliste mit Namen anzeigen
+        </button>
+        <button onClick={onZeigeGruppenMitglieder} className="w-full py-2 rounded-lg bg-zinc-800 text-emerald-400 text-sm font-bold uppercase tracking-wide">
+          Gruppen-Mitglieder mit Namen anzeigen
+        </button>
+        <button onClick={onResetGruppenZaehler} className="w-full py-2 rounded-lg bg-zinc-800 text-red-300 text-sm font-bold uppercase tracking-wide">
+          Mitglieder-Zähler aller Gruppen auf 0 zurücksetzen
+        </button>
+      </div>
       <div className="space-y-2 mb-6">
         <button onClick={() => goto("liga")} className="w-full text-left bg-zinc-900 border border-zinc-800 rounded-lg p-4 text-white text-sm hover:border-emerald-600">Liga erstellen / Teams verwalten → Liga</button>
         <button onClick={() => goto("community")} className="w-full text-left bg-zinc-900 border border-zinc-800 rounded-lg p-4 text-white text-sm hover:border-emerald-600">News posten → Community</button>
