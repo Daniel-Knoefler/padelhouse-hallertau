@@ -127,7 +127,7 @@ const TILE_META = {
   chat: { label: "Chat", sub: "Nachrichten" },
   wuensche: { label: "Wünsche & Ideen", sub: "Dein Feedback" },
   firmenbenefit: { label: "Firmen-Benefit", sub: "Wellpass & Hansefit" },
-  hilfe: { label: "Hilfe & FAQ", sub: "So funktioniert die App" },
+  hilfe: { label: "Hilfe & FAQ", sub: "So funktioniert die App", hint: "+ Rechtliches" },
   regeln: { label: "Spielregeln", sub: "Die offiziellen Padel-Regeln" },
   meine_buchungen: { label: "Meine Buchungen", sub: "Termine & Zugangspin" },
   benachrichtigungen: { label: "Benachrichtigungen", sub: "Verlauf der Push-Nachrichten" },
@@ -301,6 +301,7 @@ function Tile({ tileKey, onClick, badge, moveMode, onMoveLeft, onMoveRight, disa
           <TileIcon tileKey={tileKey} />
         </div>
         <div className="text-white font-black text-xs uppercase leading-tight tracking-tight break-words">{meta.label}</div>
+        {meta.hint && <div className="text-emerald-200 text-[10px] normal-case font-normal leading-tight mt-0.5 break-words">{meta.hint}</div>}
       </button>
       {moveMode && (
         <div className="flex gap-1 mt-2">
