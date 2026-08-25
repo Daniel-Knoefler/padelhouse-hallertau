@@ -409,6 +409,24 @@ function PadelhouseApp() {
   const [benachrichtigungenGelesenBis, setBenachrichtigungenGelesenBis] = useState(null);
   const [loading, setLoading] = useState(true);
   const [nutzerAnzahl, setNutzerAnzahl] = useState(null);
+  const [showNutzerliste, setShowNutzerliste] = useState(false);
+  const [nutzerListe, setNutzerListe] = useState(null);
+
+  function ladeNutzerliste() {
+    setShowNutzerliste(true);
+    setNutzerListe(null);
+    supabase
+      .from("app_storage")
+      .select("value, updated_at")
+      .eq("storage_key", "mein-profil")
+      .then(({ data }) => {
+        const liste = (data || [])
+          .map((row) => ({ name: row.value?.name || row.value?.profilname || "", email: row.value?.email || "", zuletzt: row.updated_at }))
+          .filter((n) => n.name.trim())
+          .sort((a, b) => a.name.localeCompare(b.name, "de"));
+        setNutzerListe(liste);
+      });
+  }
 
   useEffect(() => {
     if (view === "admin" && role === "admin") {
@@ -830,11 +848,31 @@ function PadelhouseApp() {
           teamsCount={ligen.reduce((sum, l) => sum + l.teams.length, 0)}
           offeneWuensche={ideen.filter((i) => i.status === "in_pruefung").length}
           nutzerAnzahl={nutzerAnzahl}
+          onZeigeNutzerliste={ladeNutzerliste}
           goto={(v) => setView(v)}
           onAdminLogout={adminAbmelden}
           versteckteKacheln={versteckteKacheln}
           onToggleKachel={toggleKachelSichtbar}
         />
+      )}
+      {showNutzerliste && (
+        <Modal title="Nutzerliste" onClose={() => setShowNutzerliste(false)}>
+          {nutzerListe === null ? (
+            <p className="text-zinc-500 text-sm">Lädt...</p>
+          ) : nutzerListe.length === 0 ? (
+            <p className="text-zinc-500 text-sm">Noch keine Namen hinterlegt.</p>
+          ) : (
+            <div className="space-y-1.5 max-h-[60vh] overflow-y-auto">
+              <p className="text-zinc-500 text-xs mb-2">{nutzerListe.length} Person(en) mit hinterlegtem Namen. Nur intern sichtbar, nicht teilen.</p>
+              {nutzerListe.map((n, i) => (
+                <div key={i} className="bg-zinc-900 border border-zinc-800 rounded-lg p-3">
+                  <div className="text-white font-bold text-sm">{n.name}</div>
+                  {n.email && <div className="text-zinc-500 text-xs mt-0.5">{n.email}</div>}
+                </div>
+              ))}
+            </div>
+          )}
+        </Modal>
       )}
     </div>
   );
@@ -3298,11 +3336,11 @@ function WuenscheView({ ideen, onSave, role, onMarkRead }) {
   );
 }
 
-function AdminView({ ligenCount, teamsCount, offeneWuensche, nutzerAnzahl, goto, onAdminLogout, versteckteKacheln, onToggleKachel }) {
+function AdminView({ ligenCount, teamsCount, offeneWuensche, nutzerAnzahl, onZeigeNutzerliste, goto, onAdminLogout, versteckteKacheln, onToggleKachel }) {
   return (
     <div>
       <div className="text-white font-black uppercase tracking-wide mb-4">Admin-Überblick</div>
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-2 gap-4 mb-3">
         <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
           <div className="text-zinc-500 text-xs uppercase">App-Nutzer</div>
           <div className="text-2xl font-black text-emerald-400">{nutzerAnzahl === null ? "…" : nutzerAnzahl}</div>
@@ -3320,6 +3358,9 @@ function AdminView({ ligenCount, teamsCount, offeneWuensche, nutzerAnzahl, goto,
           <div className="text-2xl font-black text-emerald-400">{offeneWuensche}</div>
         </div>
       </div>
+      <button onClick={onZeigeNutzerliste} className="w-full mb-6 py-2 rounded-lg bg-zinc-800 text-emerald-400 text-sm font-bold uppercase tracking-wide">
+        Nutzerliste mit Namen anzeigen
+      </button>
       <div className="space-y-2 mb-6">
         <button onClick={() => goto("liga")} className="w-full text-left bg-zinc-900 border border-zinc-800 rounded-lg p-4 text-white text-sm hover:border-emerald-600">Liga erstellen / Teams verwalten → Liga</button>
         <button onClick={() => goto("community")} className="w-full text-left bg-zinc-900 border border-zinc-800 rounded-lg p-4 text-white text-sm hover:border-emerald-600">News posten → Community</button>
