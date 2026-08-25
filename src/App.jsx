@@ -408,6 +408,24 @@ function PadelhouseApp() {
   const [benachrichtigungen, setBenachrichtigungen] = useState([]);
   const [benachrichtigungenGelesenBis, setBenachrichtigungenGelesenBis] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [nutzerAnzahl, setNutzerAnzahl] = useState(null);
+
+  useEffect(() => {
+    if (view === "admin" && role === "admin") {
+      supabase
+        .from("app_storage")
+        .select("scope_id", { count: "exact", head: true })
+        .eq("storage_key", "app-erstbesuch")
+        .then(({ count }) => setNutzerAnzahl(typeof count === "number" ? count : null));
+    }
+  }, [view, role]);
+
+  useEffect(() => {
+    (async () => {
+      const bestehend = await loadKey("app-erstbesuch", false, null);
+      if (!bestehend) saveKey("app-erstbesuch", false, new Date().toISOString());
+    })();
+  }, []);
 
   useEffect(() => {
     if (window.location.search.includes("view=")) {
@@ -811,6 +829,7 @@ function PadelhouseApp() {
           ligenCount={ligen.length}
           teamsCount={ligen.reduce((sum, l) => sum + l.teams.length, 0)}
           offeneWuensche={ideen.filter((i) => i.status === "in_pruefung").length}
+          nutzerAnzahl={nutzerAnzahl}
           goto={(v) => setView(v)}
           onAdminLogout={adminAbmelden}
           versteckteKacheln={versteckteKacheln}
@@ -3279,11 +3298,15 @@ function WuenscheView({ ideen, onSave, role, onMarkRead }) {
   );
 }
 
-function AdminView({ ligenCount, teamsCount, offeneWuensche, goto, onAdminLogout, versteckteKacheln, onToggleKachel }) {
+function AdminView({ ligenCount, teamsCount, offeneWuensche, nutzerAnzahl, goto, onAdminLogout, versteckteKacheln, onToggleKachel }) {
   return (
     <div>
       <div className="text-white font-black uppercase tracking-wide mb-4">Admin-Überblick</div>
       <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+          <div className="text-zinc-500 text-xs uppercase">App-Nutzer</div>
+          <div className="text-2xl font-black text-emerald-400">{nutzerAnzahl === null ? "…" : nutzerAnzahl}</div>
+        </div>
         <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
           <div className="text-zinc-500 text-xs uppercase">Ligen</div>
           <div className="text-2xl font-black text-emerald-400">{ligenCount}</div>
