@@ -723,7 +723,7 @@ function PadelhouseApp() {
       )}
 
       {view === "profil" && (
-        <ProfilView profile={profile} onSave={persistProfile} role={role} onAdminLogout={adminAbmelden} />
+        <ProfilView profile={profile} onSave={persistProfile} role={role} />
       )}
 
       {view === "liga" && (
@@ -784,13 +784,14 @@ function PadelhouseApp() {
           teamsCount={ligen.reduce((sum, l) => sum + l.teams.length, 0)}
           offeneWuensche={ideen.filter((i) => i.status === "in_pruefung").length}
           goto={(v) => setView(v)}
+          onAdminLogout={adminAbmelden}
         />
       )}
     </div>
   );
 }
 
-function ProfilView({ profile, onSave, role, onAdminLogout }) {
+function ProfilView({ profile, onSave, role }) {
   const [form, setForm] = useState(profile);
   const [saved, setSaved] = useState(false);
   const [pushStatus, setPushStatus] = useState("default");
@@ -856,11 +857,6 @@ function ProfilView({ profile, onSave, role, onAdminLogout }) {
         </button>
         {saved && <p className="text-emerald-400 text-xs text-center">Gespeichert.</p>}
       </form>
-      {role === "admin" && (
-        <button onClick={onAdminLogout} className="w-full mt-4 py-2 rounded-lg bg-zinc-800 text-zinc-300 text-sm font-bold uppercase tracking-wide">
-          Als Admin abmelden
-        </button>
-      )}
     </div>
   );
 }
@@ -1006,6 +1002,7 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
   const anmeldefristAbgelaufen = !!(activeLiga?.anmeldefrist && heute > activeLiga.anmeldefrist);
   const meinTeam = activeLiga ? activeLiga.teams.find((t) => t.name === profile.teamName) : null;
   const [meinTeamNameInput, setMeinTeamNameInput] = useState("");
+  const [vorschlagError, setVorschlagError] = useState({});
   useEffect(() => { setMeinTeamNameInput(profile.teamName || ""); }, [profile.teamName]);
 
   function meinTeamUmbenennen(e) {
@@ -1250,7 +1247,6 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
     if (!sicher) return;
     persistSpiele(spiele.filter((sp) => sp.ligaId !== activeLigaId));
   }
-  const [vorschlagError, setVorschlagError] = useState({});
   function findKollision(teamId, datum, uhrzeit, excludeId) {
     return ligaSpiele.find((sp) =>
       sp.id !== excludeId && sp.terminBestaetigt && sp.datum === datum && sp.uhrzeit === uhrzeit &&
@@ -3250,7 +3246,7 @@ function WuenscheView({ ideen, onSave, role, onMarkRead }) {
   );
 }
 
-function AdminView({ ligenCount, teamsCount, offeneWuensche, goto }) {
+function AdminView({ ligenCount, teamsCount, offeneWuensche, goto, onAdminLogout }) {
   return (
     <div>
       <div className="text-white font-black uppercase tracking-wide mb-4">Admin-Überblick</div>
@@ -3275,6 +3271,9 @@ function AdminView({ ligenCount, teamsCount, offeneWuensche, goto }) {
         <button onClick={() => goto("training")} className="w-full text-left bg-zinc-900 border border-zinc-800 rounded-lg p-4 text-white text-sm hover:border-emerald-600">Kurstermin anlegen → Trainingskurse</button>
         <button onClick={() => goto("wuensche")} className="w-full text-left bg-zinc-900 border border-zinc-800 rounded-lg p-4 text-white text-sm hover:border-emerald-600">Wünsche bearbeiten → Wünsche & Ideen</button>
       </div>
+      <button onClick={onAdminLogout} className="w-full mt-6 py-2 rounded-lg bg-zinc-800 text-zinc-300 text-sm font-bold uppercase tracking-wide">
+        Als Admin abmelden
+      </button>
     </div>
   );
 }
