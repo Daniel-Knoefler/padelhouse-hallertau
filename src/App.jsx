@@ -708,14 +708,20 @@ function PadelhouseApp() {
           {view !== "benachrichtigungen" && (
             <GlockeButton badge={unreadBenachrichtigungen} onClick={() => setView("benachrichtigungen")} />
           )}
+          {role === "admin" && (
+            <button onClick={adminAbmelden} className="px-3 py-2 rounded-full bg-zinc-800 text-red-300 text-xs font-bold uppercase tracking-wide shrink-0">Abmelden</button>
+          )}
         </header>
       )}
 
       {view === "home" && (
         <div>
           <div className="bg-zinc-900 rounded-2xl p-3 mb-3 relative">
-            <div className="absolute left-3 top-3 z-10">
+            <div className="absolute left-3 top-3 z-10 flex items-center gap-2">
               <GlockeButton badge={unreadBenachrichtigungen} onClick={() => setView("benachrichtigungen")} />
+              {role === "admin" && (
+                <button onClick={adminAbmelden} className="px-3 py-2 rounded-full bg-zinc-800 text-red-300 text-xs font-bold uppercase tracking-wide shrink-0">Abmelden</button>
+              )}
             </div>
             <div className="absolute right-3 top-3 z-10 flex flex-col items-end gap-1.5">
               <div className="flex items-center gap-1.5">
@@ -3393,10 +3399,6 @@ function AdminView({ ligenCount, teamsCount, offeneWuensche, nutzerAnzahl, onZei
           );
         })}
       </div>
-
-      <button onClick={onAdminLogout} className="w-full mt-6 py-2 rounded-lg bg-zinc-800 text-zinc-300 text-sm font-bold uppercase tracking-wide">
-        Als Admin abmelden
-      </button>
     </div>
   );
 }
