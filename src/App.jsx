@@ -201,10 +201,23 @@ function computeTable(spiele, teams, ligaId) {
     heim.sp++; gast.sp++;
     heim.saetzeP += hS; heim.saetzeG += gS;
     gast.saetzeP += gS; gast.saetzeG += hS;
-    if (hS > gS) { heim.s++; gast.n++; heim.pkt += 3; }
-    else if (gS > hS) { gast.s++; heim.n++; gast.pkt += 3; }
+    // Offizielle Punktevergabe (analog gängiger Padel-Ligen): Sieg 2:0-Sätze = 3 Punkte,
+    // Sieg 2:1 = 2 Punkte, Niederlage 1:2 = 1 Punkt, Niederlage 0:2 = 0 Punkte.
+    if (hS > gS) {
+      heim.s++; gast.n++;
+      heim.pkt += gS === 0 ? 3 : 2;
+      gast.pkt += gS === 0 ? 0 : 1;
+    } else if (gS > hS) {
+      gast.s++; heim.n++;
+      gast.pkt += hS === 0 ? 3 : 2;
+      heim.pkt += hS === 0 ? 0 : 1;
+    }
   });
-  return Object.values(rows).sort((a, b) => b.pkt - a.pkt || (b.saetzeP - b.saetzeG) - (a.saetzeP - a.saetzeG));
+  return Object.values(rows).sort((a, b) =>
+    b.pkt - a.pkt ||
+    b.s - a.s ||
+    (b.saetzeP - b.saetzeG) - (a.saetzeP - a.saetzeG)
+  );
 }
 
 function CourtDivider() {
@@ -1370,7 +1383,7 @@ function LigaView({ loading, spiele, persistSpiele, ligen, persistLigen, role, p
           Info
         </button>
       </div>
-      <div className="text-zinc-500 text-xs mb-4">{activeLiga?.modus === "einzel" ? "Einzel (1 vs 1)" : "Doppel (2 vs 2)"} · {activeLiga?.zeitraum || "Zeitraum noch nicht festgelegt"} · Tabellenerster nach Saisonende ist Meister (Hin- und Rückspiel)</div>
+      <div className="text-zinc-500 text-xs mb-4">{activeLiga?.modus === "einzel" ? "Einzel (1 vs 1)" : "Doppel (2 vs 2)"} · {activeLiga?.zeitraum || "Zeitraum noch nicht festgelegt"} · Punkte: 2:0-Sieg = 3 Pkt, 2:1-Sieg = 2 Pkt, 1:2-Niederlage = 1 Pkt, 0:2-Niederlage = 0 Pkt · Tabellenerster nach Saisonende ist Meister</div>
 
       {showInfoModal && (
         <Modal title="Info & Regeln" onClose={() => setShowInfoModal(false)}>
