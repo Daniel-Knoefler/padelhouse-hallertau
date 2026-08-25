@@ -2888,11 +2888,11 @@ function TechnikView() {
       <p className="text-zinc-400 text-sm mb-4">Die wichtigsten Padel-Schläge im Video – Trainingsvideos von Padello.</p>
       <div className="grid grid-cols-3 gap-2.5">
         {SCHLAG_VIDEOS.map((v) => (
-          <button key={v.key} onClick={() => setAktiv(v)} className="bg-white rounded-xl p-3 text-left min-w-0">
-            <div className="w-10 h-10 rounded-lg bg-zinc-950 text-emerald-500 flex items-center justify-center mb-2">
+          <button key={v.key} onClick={() => setAktiv(v)} className="relative rounded-xl p-3 min-w-0 border-2 border-white text-left" style={{ background: "#1C5E27" }}>
+            <div className="w-10 h-10 rounded-lg bg-zinc-200 border-2 border-black text-emerald-500 flex items-center justify-center mb-2">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M10 9.5v5l4.5-2.5Z" fill="currentColor" stroke="none" /></svg>
             </div>
-            <div className="text-zinc-950 font-bold text-sm leading-tight break-words">{v.label}</div>
+            <div className="text-white font-black text-xs uppercase leading-tight tracking-tight break-words">{v.label}</div>
           </button>
         ))}
       </div>
