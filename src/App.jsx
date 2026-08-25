@@ -417,15 +417,22 @@ function PadelhouseApp() {
     setNutzerListe(null);
     supabase
       .from("app_storage")
-      .select("value, updated_at")
+      .select("scope_id, value, updated_at")
       .eq("storage_key", "mein-profil")
       .then(({ data }) => {
         const liste = (data || [])
-          .map((row) => ({ name: row.value?.name || row.value?.profilname || "", email: row.value?.email || "", zuletzt: row.updated_at }))
+          .map((row) => ({ scopeId: row.scope_id, name: row.value?.name || row.value?.profilname || "", email: row.value?.email || "", zuletzt: row.updated_at }))
           .filter((n) => n.name.trim())
           .sort((a, b) => a.name.localeCompare(b.name, "de"));
         setNutzerListe(liste);
       });
+  }
+
+  async function eintragAusNutzerlisteLoeschen(scopeId, name) {
+    if (!window.confirm(`Eintrag "${name}" wirklich entfernen? Das löscht das gespeicherte Profil auf diesem Gerät (Name, E-Mail, Telefon) und zählt auch beim App-Nutzer-Zähler nicht mehr mit.`)) return;
+    await supabase.from("app_storage").delete().eq("scope_id", scopeId).in("storage_key", ["mein-profil", "app-erstbesuch"]);
+    setNutzerListe((prev) => prev.filter((n) => n.scopeId !== scopeId));
+    setNutzerAnzahl((prev) => (typeof prev === "number" ? Math.max(0, prev - 1) : prev));
   }
 
   useEffect(() => {
@@ -865,9 +872,12 @@ function PadelhouseApp() {
             <div className="space-y-1.5 max-h-[60vh] overflow-y-auto">
               <p className="text-zinc-500 text-xs mb-2">{nutzerListe.length} Person(en) mit hinterlegtem Namen. Nur intern sichtbar, nicht teilen.</p>
               {nutzerListe.map((n, i) => (
-                <div key={i} className="bg-zinc-900 border border-zinc-800 rounded-lg p-3">
-                  <div className="text-white font-bold text-sm">{n.name}</div>
-                  {n.email && <div className="text-zinc-500 text-xs mt-0.5">{n.email}</div>}
+                <div key={i} className="bg-zinc-900 border border-zinc-800 rounded-lg p-3 flex items-center justify-between gap-2">
+                  <div>
+                    <div className="text-white font-bold text-sm">{n.name}</div>
+                    {n.email && <div className="text-zinc-500 text-xs mt-0.5">{n.email}</div>}
+                  </div>
+                  <button onClick={() => eintragAusNutzerlisteLoeschen(n.scopeId, n.name)} className="text-red-400 text-xs uppercase tracking-wide font-bold shrink-0">Entfernen</button>
                 </div>
               ))}
             </div>
