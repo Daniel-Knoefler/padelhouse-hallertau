@@ -118,6 +118,7 @@ function PayPalButton({ betrag, beschreibung, onErfolg }) {
 }
 const PLAYTOMIC_PLAYSTORE_URL = "https://play.google.com/store/apps/details?id=com.playtomic";
 const ADMIN_PIN = "alkd";
+const ADMIN_PUSH_TAG = "__ADMIN__";
 const TILE_META = {
   liga: { label: "Liga", sub: "Tabelle & Spielplan" },
   community: { label: "Community", sub: "News & Gruppen" },
@@ -974,7 +975,7 @@ function ProfilView({ profile, onSave, role }) {
       await pushDeaktivieren();
       setPushStatus("default");
     } else {
-      const res = await pushAktivieren(profile.teamName || null);
+      const res = await pushAktivieren(role === "admin" ? ADMIN_PUSH_TAG : (profile.teamName || null));
       if (res.erfolg) setPushStatus("granted");
       else if (res.grund === "verweigert") setPushFehler("Benachrichtigungen wurden im Browser blockiert. Erlaubnis in den Browser-Einstellungen für diese Seite prüfen.");
       else if (res.grund === "nicht_unterstuetzt") setPushFehler("Push-Benachrichtigungen werden auf diesem Gerät/Browser nicht unterstützt.");
@@ -1008,7 +1009,10 @@ function ProfilView({ profile, onSave, role }) {
 
         <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
           <div className="text-white font-bold text-sm mb-1">Benachrichtigungen</div>
-          <p className="text-zinc-500 text-xs mb-3">Erhalte eine Push-Benachrichtigung bei neuen Chat-Nachrichten und News, auch wenn die App geschlossen ist.</p>
+          <p className="text-zinc-500 text-xs mb-3">
+            Erhalte eine Push-Benachrichtigung bei neuen Chat-Nachrichten und News, auch wenn die App geschlossen ist.
+            {role === "admin" && " Als Admin bekommst du zusätzlich eine Push-Benachrichtigung, wenn jemand im Admin-Support schreibt oder eine neue Idee bei Wünsche & Ideen einreicht."}
+          </p>
           <button type="button" onClick={pushUmschalten} disabled={pushLaden}
             className={"w-full py-2 rounded-lg text-sm font-bold uppercase tracking-wide disabled:opacity-50 " + (pushStatus === "granted" ? "bg-zinc-800 text-zinc-300" : "bg-emerald-500 text-white")}>
             {pushLaden ? "Einen Moment..." : pushStatus === "granted" ? "Benachrichtigungen deaktivieren" : "Benachrichtigungen aktivieren"}
@@ -2830,6 +2834,7 @@ function ChatView({ threads, onSave, chatStatus, onStatus, profile, role }) {
       pushBenachrichtigungSenden(sender + " im Hallen-Chat", text, "/?view=chat", null, "chat-" + activeId);
     }
     if (updated.type === "1:1" && role !== "admin") {
+      pushBenachrichtigungSenden(sender + " im Admin-Support", text, "/?view=chat", ADMIN_PUSH_TAG, "chat-" + activeId);
       pushAdminEmailSenden(
         "Neue Nachricht im Admin-Support-Chat",
         `${sender} schreibt:\n\n${text}`
@@ -3360,6 +3365,9 @@ function WuenscheView({ ideen, onSave, role, onMarkRead }) {
     const text = `Neue Idee im Padelhouse\nIdee: ${form.text}\nVon: ${form.name || "Anonym"}`;
     setMailLink(mailtoLink("Neue Idee im Padelhouse", text));
     setWaLink(whatsappLink(text));
+    if (role !== "admin") {
+      pushBenachrichtigungSenden("Neue Idee: " + (form.name || "Anonym"), form.text, "/?view=wuensche", ADMIN_PUSH_TAG, null);
+    }
     setForm({ text: "", name: "" });
   }
   function like(id) {
