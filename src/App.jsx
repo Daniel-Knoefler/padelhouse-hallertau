@@ -1899,7 +1899,7 @@ function CommunityView({ news, gruppen, role, profile, onNews, onGruppen, onMark
   function sendGruppenNachricht(id) {
     if (!gruppeText.trim()) return;
     const sender = profile.profilname || profile.name || (role === "admin" ? "Admin" : "Ich");
-    const next = gruppen.map((g) => g.id === id ? { ...g, messages: [...g.messages, { from: sender, text: gruppeText, zeit: new Date().toTimeString().slice(0, 5) }] } : g);
+    const next = gruppen.map((g) => g.id === id ? { ...g, messages: [...g.messages, { from: sender, text: gruppeText, zeit: new Date().toTimeString().slice(0, 5), deviceId: getDeviceId() }] } : g);
     onGruppen(next);
     const updated = next.find((g) => g.id === id);
     onGruppenStatus({ ...gruppenStatus, [id]: { ...statusOf(id), readCount: updated.messages.length } });
@@ -2073,7 +2073,7 @@ function CommunityView({ news, gruppen, role, profile, onNews, onGruppen, onMark
                   <p className="text-zinc-500 text-sm text-center py-4">Noch keine Nachrichten.</p>
                 ) : g.messages.map((m, i) => (
                   <ChatBubble key={i} m={m} eigene={m.from === gruppenSender} zeigeName={true}
-                    onLoeschen={role === "admin" ? () => onGruppen(gruppen.map((gg) => gg.id === g.id ? { ...gg, messages: gg.messages.filter((_, idx) => idx !== i) } : gg)) : null} />
+                    onLoeschen={(role === "admin" || m.deviceId === getDeviceId()) ? () => onGruppen(gruppen.map((gg) => gg.id === g.id ? { ...gg, messages: gg.messages.filter((_, idx) => idx !== i) } : gg)) : null} />
                 ))}
                 <div ref={gruppenBottomRef} />
               </div>
@@ -2836,7 +2836,7 @@ function ChatView({ threads, onSave, chatStatus, onStatus, profile, role }) {
     e.preventDefault();
     if (!text.trim()) return;
     const sender = meineKennung;
-    const nextThreads = threads.map((t) => t.id === activeId ? { ...t, messages: [...t.messages, { from: sender, text, zeit: new Date().toTimeString().slice(0, 5) }] } : t);
+    const nextThreads = threads.map((t) => t.id === activeId ? { ...t, messages: [...t.messages, { from: sender, text, zeit: new Date().toTimeString().slice(0, 5), deviceId: getDeviceId() }] } : t);
     onSave(nextThreads);
     const updated = nextThreads.find((t) => t.id === activeId);
     onStatus({ ...chatStatus, [activeId]: { ...statusOf(activeId), readCount: updated.messages.length } });
@@ -2885,7 +2885,7 @@ function ChatView({ threads, onSave, chatStatus, onStatus, profile, role }) {
                   <div className="text-white text-sm whitespace-pre-wrap break-words">{m.text}</div>
                   <div className="flex items-center justify-end gap-2 mt-0.5">
                     <span className="text-[10px] text-white/60">{m.zeit}</span>
-                    {role === "admin" && (
+                    {(role === "admin" || m.deviceId === getDeviceId()) && (
                       <button onClick={() => onSave(threads.map((t) => t.id === active.id ? { ...t, messages: t.messages.filter((_, idx) => idx !== i) } : t))} className="text-[10px] text-white/50 uppercase">✕</button>
                     )}
                   </div>
@@ -3371,7 +3371,7 @@ function WuenscheView({ ideen, onSave, role, onMarkRead }) {
   function submit(e) {
     e.preventDefault();
     if (!form.text.trim()) return;
-    onSave([...ideen, { id: "w-" + Date.now(), text: form.text, name: form.name || "Anonym", likes: 0, status: "in_pruefung", comment: "" }]);
+    onSave([...ideen, { id: "w-" + Date.now(), text: form.text, name: form.name || "Anonym", likes: 0, status: "in_pruefung", comment: "", deviceId: getDeviceId() }]);
     const text = `Neue Idee im Padelhouse\nIdee: ${form.text}\nVon: ${form.name || "Anonym"}`;
     setMailLink(mailtoLink("Neue Idee im Padelhouse", text));
     setWaLink(whatsappLink(text));
@@ -3394,6 +3394,10 @@ function WuenscheView({ ideen, onSave, role, onMarkRead }) {
   }
   function saveComment(id) {
     onSave(ideen.map((i) => i.id === id ? { ...i, comment: commentDrafts[id] ?? i.comment } : i));
+  }
+  function loescheIdee(id) {
+    if (!window.confirm("Diese Idee wirklich löschen?")) return;
+    onSave(ideen.filter((i) => i.id !== id));
   }
 
   const sorted = ideen.slice().sort((a, b) => b.likes - a.likes);
@@ -3429,7 +3433,12 @@ function WuenscheView({ ideen, onSave, role, onMarkRead }) {
                 <button onClick={() => role === "admin" && cycleStatus(idea.id)} title={meta.label}
                   className={"mt-1 w-4 h-4 rounded-full border-2 shrink-0 " + meta.cls} />
                 <div className="flex-1">
-                  <div className="text-zinc-200 text-sm">{idea.text}</div>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="text-zinc-200 text-sm">{idea.text}</div>
+                    {(role === "admin" || idea.deviceId === getDeviceId()) && (
+                      <button onClick={() => loescheIdee(idea.id)} className="text-red-400 text-[10px] uppercase tracking-wide font-bold shrink-0">Löschen</button>
+                    )}
+                  </div>
                   <div className="text-zinc-500 text-xs mt-1">{idea.name} · {meta.label}</div>
                   {idea.comment && <div className="text-emerald-400 text-xs mt-2 border-l-2 border-emerald-700 pl-2">{idea.comment}</div>}
                   {role === "admin" && (
