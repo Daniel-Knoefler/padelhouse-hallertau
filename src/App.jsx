@@ -968,6 +968,16 @@ function ProfilView({ profile, onSave, role }) {
   useEffect(() => setForm(profile), [profile]);
   useEffect(() => { pushBerechtigungStatus().then(setPushStatus); }, []);
 
+  // Falls Benachrichtigungen auf diesem Gerät schon früher (z. B. als normaler Nutzer oder
+  // vor dieser Funktion) erlaubt wurden, zeigt der Button direkt "Deaktivieren" an und die
+  // Admin-Markierung würde nie gesetzt. Deshalb hier still im Hintergrund nachziehen, sobald
+  // als Admin eingeloggt und Berechtigung bereits erteilt ist – kein erneuter Klick nötig.
+  useEffect(() => {
+    if (role === "admin" && pushStatus === "granted") {
+      pushAktivieren(ADMIN_PUSH_TAG).catch(() => {});
+    }
+  }, [role, pushStatus]);
+
   async function pushUmschalten() {
     setPushFehler("");
     setPushLaden(true);
