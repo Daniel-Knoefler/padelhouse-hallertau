@@ -123,7 +123,7 @@ const TILE_META = {
   liga: { label: "Liga", sub: "Tabelle & Spielplan" },
   community: { label: "Community", sub: "News & Gruppen" },
   training: { label: "Kurse", sub: "Termine buchen" },
-  buchung: { label: "Buchung", sub: "Events, Ballmaschine & mehr" },
+  buchung: { label: "Events", sub: "Events, Ballmaschine & mehr" },
   fanshop: { label: "Fanshop", sub: "Merchandise vormerken" },
   chat: { label: "Chat", sub: "Nachrichten" },
   wuensche: { label: "Wünsche & Ideen", sub: "Dein Feedback" },
@@ -744,7 +744,7 @@ function PadelhouseApp() {
 
       {view !== "home" && (
         <header className="flex items-center gap-3 mb-6">
-          <button onClick={() => setView("home")} className="text-emerald-400 text-xl leading-none" aria-label="Zurück">←</button>
+          <button onClick={() => setView("home")} className="text-emerald-400 text-3xl leading-none p-1 -m-1" aria-label="Zurück">←</button>
           <div className="text-lg font-black uppercase tracking-wide text-white flex-1">{TILE_META[view]?.label || "Padelhouse"}</div>
           {view !== "benachrichtigungen" && (
             <GlockeButton badge={unreadBenachrichtigungen} onClick={() => setView("benachrichtigungen")} />
@@ -2980,12 +2980,12 @@ const FAQ_DATEN = [
     ],
   },
   {
-    kategorie: "Buchung",
+    kategorie: "Events",
     fragen: [
-      { f: "Wie melde ich mich für ein Event an?", a: "Buchung → Events → beim gewünschten Event \"Anmelden\" antippen, Kontaktdaten eintragen (Personenanzahl auch als Freitext möglich, z. B. Namen). Nach dem Absenden kannst du die Anmeldung zusätzlich direkt per E-Mail oder WhatsApp an den Betreiber schicken." },
-      { f: "Wie melde ich mich für ein Turnier an?", a: "Buchung → Turniere → beim gewünschten Turnier \"Anmelden\" antippen und Kontaktdaten eintragen. Ist beim Turnier ein Playtomic-Link hinterlegt, kannst du darüber direkt zur offiziellen Ausschreibung springen." },
-      { f: "Wie frage ich ein Privatevent (z. B. Geburtstag, Firmenfeier) an?", a: "Buchung → Privatevent → Formular ausfüllen. Nach dem Absenden kannst du die Anfrage direkt per E-Mail oder WhatsApp an den Betreiber schicken." },
-      { f: "Wie reserviere ich die Ballmaschine?", a: "Buchung → Ballmaschine → Name, E-Mail, Datum, Uhrzeit und Zahlungsart (bar oder Überweisung) angeben. Der Zahlencode fürs Schloss wird nicht automatisch erzeugt, sondern dir vom Betreiber persönlich vor Terminbeginn mitgeteilt." },
+      { f: "Wie melde ich mich für ein Event an?", a: "In der Events-Kachel im Unter-Tab \"Events\" beim gewünschten Event \"Anmelden\" antippen, Kontaktdaten eintragen (Personenanzahl auch als Freitext möglich, z. B. Namen). Nach dem Absenden kannst du die Anmeldung zusätzlich direkt per E-Mail oder WhatsApp an den Betreiber schicken." },
+      { f: "Wie melde ich mich für ein Turnier an?", a: "Events → Turniere → beim gewünschten Turnier \"Anmelden\" antippen und Kontaktdaten eintragen. Ist beim Turnier ein Playtomic-Link hinterlegt, kannst du darüber direkt zur offiziellen Ausschreibung springen." },
+      { f: "Wie frage ich ein Privatevent (z. B. Geburtstag, Firmenfeier) an?", a: "Events → Privatevent → Formular ausfüllen. Nach dem Absenden kannst du die Anfrage direkt per E-Mail oder WhatsApp an den Betreiber schicken." },
+      { f: "Wie reserviere ich die Ballmaschine?", a: "Events → Ballmaschine → Name, E-Mail, Datum, Uhrzeit und Zahlungsart (bar oder Überweisung) angeben. Der Zahlencode fürs Schloss wird nicht automatisch erzeugt, sondern dir vom Betreiber persönlich vor Terminbeginn mitgeteilt." },
     ],
   },
   {
@@ -3491,7 +3491,7 @@ function AdminView({ ligenCount, teamsCount, offeneWuensche, nutzerAnzahl, onZei
       <div className="space-y-2 mb-6">
         <button onClick={() => goto("liga")} className="w-full text-left bg-zinc-900 border border-zinc-800 rounded-lg p-4 text-white text-sm hover:border-emerald-600">Liga erstellen / Teams verwalten → Liga</button>
         <button onClick={() => goto("community")} className="w-full text-left bg-zinc-900 border border-zinc-800 rounded-lg p-4 text-white text-sm hover:border-emerald-600">News posten → Community</button>
-        <button onClick={() => goto("buchung")} className="w-full text-left bg-zinc-900 border border-zinc-800 rounded-lg p-4 text-white text-sm hover:border-emerald-600">Turnier erstellen → Buchung</button>
+        <button onClick={() => goto("buchung")} className="w-full text-left bg-zinc-900 border border-zinc-800 rounded-lg p-4 text-white text-sm hover:border-emerald-600">Turnier erstellen → Events</button>
         <button onClick={() => goto("training")} className="w-full text-left bg-zinc-900 border border-zinc-800 rounded-lg p-4 text-white text-sm hover:border-emerald-600">Kurstermin anlegen → Trainingskurse</button>
         <button onClick={() => goto("wuensche")} className="w-full text-left bg-zinc-900 border border-zinc-800 rounded-lg p-4 text-white text-sm hover:border-emerald-600">Wünsche bearbeiten → Wünsche & Ideen</button>
       </div>
