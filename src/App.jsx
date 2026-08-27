@@ -744,7 +744,9 @@ function PadelhouseApp() {
 
       {view !== "home" && (
         <header className="flex items-center gap-3 mb-6">
-          <button onClick={() => setView("home")} className="text-emerald-400 text-4xl font-black leading-none p-1 -m-1" aria-label="Zurück">←</button>
+          <button onClick={() => setView("home")} className="w-11 h-11 shrink-0 rounded-full bg-emerald-500 text-white flex items-center justify-center -ml-1" aria-label="Zurück">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M11 18l-6-6 6-6" /></svg>
+          </button>
           <div className="text-lg font-black uppercase tracking-wide text-white flex-1">{TILE_META[view]?.label || "Padelhouse"}</div>
           {view !== "benachrichtigungen" && (
             <GlockeButton badge={unreadBenachrichtigungen} onClick={() => setView("benachrichtigungen")} />
