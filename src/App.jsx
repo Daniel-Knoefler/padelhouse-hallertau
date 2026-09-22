@@ -127,7 +127,7 @@ const TILE_META = {
   fanshop: { label: "Fanshop", sub: "Merchandise vormerken" },
   chat: { label: "Chat", sub: "Nachrichten" },
   wuensche: { label: "Wünsche & Ideen", sub: "Dein Feedback" },
-  firmenbenefit: { label: "Firmen-Benefit", sub: "Wellpass, Hansefit & Abo-Modelle" },
+  firmenbenefit: { label: "Firmenbenefit & Abo", sub: "Wellpass, Hansefit & Abo-Modelle" },
   hilfe: { label: "Hilfe & FAQ", sub: "So funktioniert die App", hint: "+ Rechtliches" },
   regeln: { label: "Spielregeln", sub: "Die offiziellen Padel-Regeln" },
   meine_buchungen: { label: "Meine Buchungen", sub: "Termine & Zugangspin" },
@@ -397,6 +397,7 @@ function PadelhouseApp() {
   const [vormerkungen, setVormerkungen] = useState([]);
   const [benefitAnfragen, setBenefitAnfragen] = useState([]);
   const [aboModelle, setAboModelle] = useState([]);
+  const [aboAnfragen, setAboAnfragen] = useState([]);
   const [threads, setThreads] = useState(CHAT_SEED);
   const [chatStatus, setChatStatus] = useState({});
   const [ideen, setIdeen] = useState(WUENSCHE_SEED);
@@ -532,7 +533,7 @@ function PadelhouseApp() {
 
   useEffect(() => {
     async function loadAll() {
-      const [sp, lg, comm, k, anf, tur, ev, vm, ch, cs, id, nrc, irc, bf, gs, kb, bp, fp, ct, mb, gb, prof, order, versteckt, istAdmin, am] = await Promise.all([
+      const [sp, lg, comm, k, anf, tur, ev, vm, ch, cs, id, nrc, irc, bf, gs, kb, bp, fp, ct, mb, gb, prof, order, versteckt, istAdmin, am, aa] = await Promise.all([
         loadKey("liga-spielplan", true, []),
         loadKey("ligen", true, LIGEN_SEED),
         loadKey("community-daten", true, { news: NEWS_SEED, gruppen: GRUPPEN_SEED }),
@@ -559,6 +560,7 @@ function PadelhouseApp() {
         loadKey("versteckte-kacheln", true, []),
         loadKey("ist-admin", false, false),
         loadKey("abo-modelle", true, []),
+        loadKey("abo-anfragen", false, []),
       ]);
       setSpiele(sp);
       setLigen(lg);
@@ -576,6 +578,7 @@ function PadelhouseApp() {
       setIdeenReadCount(irc);
       setBenefitAnfragen(bf);
       setAboModelle(am);
+      setAboAnfragen(aa);
       setGruppenStatus(gs);
       setKursBuchungen(kb);
       setBallmaschinePreis(bp);
@@ -648,6 +651,7 @@ function PadelhouseApp() {
   function persistVormerkungen(next) { setVormerkungen(next); saveKey("fanshop-vormerkungen", false, next); }
   function persistBenefitAnfragen(next) { setBenefitAnfragen(next); saveKey("firmenbenefit-anfragen", false, next); }
   function persistAboModelle(next) { setAboModelle(next); saveKey("abo-modelle", true, next); }
+  function persistAboAnfragen(next) { setAboAnfragen(next); saveKey("abo-anfragen", false, next); }
   function persistThreads(next) { setThreads(next); saveKey("chat-threads", true, next); }
   function persistChatStatus(next) { setChatStatus(next); saveKey("chat-status", false, next); }
   function persistIdeen(next) { setIdeen(next); saveKey("wuensche-ideen", true, next); }
@@ -885,7 +889,7 @@ function PadelhouseApp() {
       )}
 
       {view === "firmenbenefit" && (
-        <FirmenbenefitHub anfragen={benefitAnfragen} onSaveAnfragen={persistBenefitAnfragen} aboModelle={aboModelle} onSaveAbo={persistAboModelle} role={role} />
+        <FirmenbenefitHub anfragen={benefitAnfragen} onSaveAnfragen={persistBenefitAnfragen} aboModelle={aboModelle} onSaveAbo={persistAboModelle} aboAnfragen={aboAnfragen} onSaveAboAnfragen={persistAboAnfragen} role={role} />
       )}
 
       {view === "hilfe" && <HilfeView />}
@@ -3020,7 +3024,7 @@ const FAQ_DATEN = [
     kategorie: "Firmenbenefit",
     fragen: [
       { f: "Wie registriere ich mich für Wellpass/Hansefit?", a: "In der Kachel \"Firmen-Benefit\" auf die Unter-Kachel \"Firmenbenefit\" tippen und das Formular ausfüllen. Wichtig: Die E-Mail-Adresse muss dieselbe sein wie in deinem Playtomic-Profil." },
-      { f: "Wo finde ich die Abo-Modelle?", a: "In der Kachel \"Firmen-Benefit\" auf die Unter-Kachel \"Abo-Modelle\" tippen. Dort listet der Betreiber die aktuell angebotenen Abos mit Beschreibung und Preis auf." },
+      { f: "Wo finde ich die Abo-Modelle und wie melde ich mich an?", a: "In der Kachel \"Firmenbenefit & Abo\" auf die Unter-Kachel \"Abo-Modelle\" tippen. Dort listet der Betreiber die aktuell angebotenen Abos mit Beschreibung und Preis auf. Beim gewünschten Abo auf \"Anmelden\" tippen, Name und E-Mail eintragen – nach dem Absenden kannst du die Anmeldung zusätzlich direkt per E-Mail oder WhatsApp an den Betreiber schicken." },
     ],
   },
   {
@@ -3311,7 +3315,7 @@ function HilfeView() {
   );
 }
 
-function FirmenbenefitHub({ anfragen, onSaveAnfragen, aboModelle, onSaveAbo, role }) {
+function FirmenbenefitHub({ anfragen, onSaveAnfragen, aboModelle, onSaveAbo, aboAnfragen, onSaveAboAnfragen, role }) {
   const [sub, setSub] = useState(null);
 
   if (sub === "firmenbenefit") {
@@ -3326,7 +3330,7 @@ function FirmenbenefitHub({ anfragen, onSaveAnfragen, aboModelle, onSaveAbo, rol
     return (
       <div>
         <button onClick={() => setSub(null)} className="text-emerald-400 text-sm mb-4">← Zurück zur Übersicht</button>
-        <AboModelleView aboModelle={aboModelle} onSave={onSaveAbo} role={role} />
+        <AboModelleView aboModelle={aboModelle} onSave={onSaveAbo} anfragen={aboAnfragen} onSaveAnfragen={onSaveAboAnfragen} role={role} />
       </div>
     );
   }
@@ -3344,8 +3348,14 @@ function FirmenbenefitHub({ anfragen, onSaveAnfragen, aboModelle, onSaveAbo, rol
   );
 }
 
-function AboModelleView({ aboModelle, onSave, role }) {
+function AboModelleView({ aboModelle, onSave, anfragen, onSaveAnfragen, role }) {
   const [form, setForm] = useState({ titel: "", text: "" });
+  const [anmeldeTarget, setAnmeldeTarget] = useState(null);
+  const [anmeldeForm, setAnmeldeForm] = useState({ name: "", email: "", nachricht: "" });
+  const [anmeldeError, setAnmeldeError] = useState("");
+  const [confirmId, setConfirmId] = useState(null);
+  const [mailLink, setMailLink] = useState(null);
+  const [waLink, setWaLink] = useState(null);
 
   function submit(e) {
     e.preventDefault();
@@ -3356,6 +3366,27 @@ function AboModelleView({ aboModelle, onSave, role }) {
   function loeschen(id) {
     if (!window.confirm("Dieses Abo-Modell wirklich löschen?")) return;
     onSave(aboModelle.filter((a) => a.id !== id));
+  }
+  function anmeldungOeffnen(a) {
+    setAnmeldeTarget(a.id);
+    setConfirmId(null);
+    setAnmeldeError("");
+    setAnmeldeForm({ name: "", email: "", nachricht: "" });
+  }
+  function submitAnmeldung(e, a) {
+    e.preventDefault();
+    if (!anmeldeForm.name.trim() || !anmeldeForm.email.trim()) {
+      setAnmeldeError("Bitte Name und E-Mail ausfüllen.");
+      return;
+    }
+    setAnmeldeError("");
+    onSaveAnfragen([...anfragen, { id: "aa-" + Date.now(), aboTitel: a.titel, ...anmeldeForm }]);
+    const text = `Anmeldung Abo-Modell: ${a.titel}\nName: ${anmeldeForm.name}\nE-Mail: ${anmeldeForm.email}${anmeldeForm.nachricht.trim() ? "\nNachricht: " + anmeldeForm.nachricht : ""}`;
+    pushAdminEmailSenden(`Neue Anmeldung Abo-Modell: ${a.titel}`, text);
+    setMailLink(mailtoLink(`Anmeldung Abo-Modell: ${a.titel}`, text));
+    setWaLink(whatsappLink(text));
+    setAnmeldeTarget(null);
+    setConfirmId(a.id);
   }
 
   return (
@@ -3382,6 +3413,31 @@ function AboModelleView({ aboModelle, onSave, role }) {
                 )}
               </div>
               <div className="text-zinc-400 text-sm mt-1 whitespace-pre-wrap">{a.text}</div>
+
+              {confirmId === a.id && (
+                <div className="bg-zinc-950 border border-emerald-700 rounded-lg p-3 mt-3 text-sm text-emerald-400 space-y-2">
+                  <p>Anmeldung gespeichert. Sende sie jetzt per E-Mail oder WhatsApp an den Betreiber ab.</p>
+                  <div className="flex gap-2">
+                    {mailLink && <a href={mailLink} className="flex-1 text-center px-3 py-1.5 rounded-lg bg-emerald-500 text-white text-xs font-bold uppercase tracking-wide">E-Mail öffnen</a>}
+                    {waLink && <a href={waLink} target="_blank" rel="noopener noreferrer" className="flex-1 text-center px-3 py-1.5 rounded-lg bg-zinc-800 text-emerald-400 text-xs font-bold uppercase tracking-wide">WhatsApp öffnen</a>}
+                  </div>
+                </div>
+              )}
+
+              {anmeldeTarget === a.id ? (
+                <form onSubmit={(e) => submitAnmeldung(e, a)} className="mt-3 space-y-2">
+                  <input className={inputCls} placeholder="Name" value={anmeldeForm.name} onChange={(e) => setAnmeldeForm({ ...anmeldeForm, name: e.target.value })} />
+                  <input className={inputCls} type="email" placeholder="E-Mail" value={anmeldeForm.email} onChange={(e) => setAnmeldeForm({ ...anmeldeForm, email: e.target.value })} />
+                  <textarea className={inputCls} placeholder="Nachricht (optional)" rows={2} value={anmeldeForm.nachricht} onChange={(e) => setAnmeldeForm({ ...anmeldeForm, nachricht: e.target.value })} />
+                  {anmeldeError && <p className="text-red-400 text-xs">{anmeldeError}</p>}
+                  <div className="flex gap-2">
+                    <button type="submit" className="flex-1 py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">Anmelden</button>
+                    <button type="button" onClick={() => setAnmeldeTarget(null)} className="px-4 rounded-lg bg-zinc-800 text-zinc-300 text-sm font-bold uppercase tracking-wide">Abbrechen</button>
+                  </div>
+                </form>
+              ) : confirmId !== a.id && (
+                <button onClick={() => anmeldungOeffnen(a)} className="mt-3 text-xs text-emerald-400 uppercase tracking-wide font-bold">Anmelden</button>
+              )}
             </div>
           ))}
         </div>
