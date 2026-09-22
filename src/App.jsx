@@ -127,7 +127,7 @@ const TILE_META = {
   fanshop: { label: "Fanshop", sub: "Merchandise vormerken" },
   chat: { label: "Chat", sub: "Nachrichten" },
   wuensche: { label: "Wünsche & Ideen", sub: "Dein Feedback" },
-  firmenbenefit: { label: "Firmen-Benefit", sub: "Wellpass & Hansefit" },
+  firmenbenefit: { label: "Firmen-Benefit", sub: "Wellpass, Hansefit & Abo-Modelle" },
   hilfe: { label: "Hilfe & FAQ", sub: "So funktioniert die App", hint: "+ Rechtliches" },
   regeln: { label: "Spielregeln", sub: "Die offiziellen Padel-Regeln" },
   meine_buchungen: { label: "Meine Buchungen", sub: "Termine & Zugangspin" },
@@ -396,6 +396,7 @@ function PadelhouseApp() {
   const [events, setEvents] = useState(EVENTS_SEED);
   const [vormerkungen, setVormerkungen] = useState([]);
   const [benefitAnfragen, setBenefitAnfragen] = useState([]);
+  const [aboModelle, setAboModelle] = useState([]);
   const [threads, setThreads] = useState(CHAT_SEED);
   const [chatStatus, setChatStatus] = useState({});
   const [ideen, setIdeen] = useState(WUENSCHE_SEED);
@@ -531,7 +532,7 @@ function PadelhouseApp() {
 
   useEffect(() => {
     async function loadAll() {
-      const [sp, lg, comm, k, anf, tur, ev, vm, ch, cs, id, nrc, irc, bf, gs, kb, bp, fp, ct, mb, gb, prof, order, versteckt, istAdmin] = await Promise.all([
+      const [sp, lg, comm, k, anf, tur, ev, vm, ch, cs, id, nrc, irc, bf, gs, kb, bp, fp, ct, mb, gb, prof, order, versteckt, istAdmin, am] = await Promise.all([
         loadKey("liga-spielplan", true, []),
         loadKey("ligen", true, LIGEN_SEED),
         loadKey("community-daten", true, { news: NEWS_SEED, gruppen: GRUPPEN_SEED }),
@@ -557,6 +558,7 @@ function PadelhouseApp() {
         loadKey("tile-order", false, TILES_DEFAULT),
         loadKey("versteckte-kacheln", true, []),
         loadKey("ist-admin", false, false),
+        loadKey("abo-modelle", true, []),
       ]);
       setSpiele(sp);
       setLigen(lg);
@@ -573,6 +575,7 @@ function PadelhouseApp() {
       setNewsReadCount(nrc);
       setIdeenReadCount(irc);
       setBenefitAnfragen(bf);
+      setAboModelle(am);
       setGruppenStatus(gs);
       setKursBuchungen(kb);
       setBallmaschinePreis(bp);
@@ -591,7 +594,7 @@ function PadelhouseApp() {
   }, []);
 
   async function refreshSharedData() {
-    const [sp, lg, comm, k, tur, ev, ch, id, bp, fp, ct, versteckt] = await Promise.all([
+    const [sp, lg, comm, k, tur, ev, ch, id, bp, fp, ct, versteckt, am] = await Promise.all([
       loadKey("liga-spielplan", true, []),
       loadKey("ligen", true, LIGEN_SEED),
       loadKey("community-daten", true, { news: NEWS_SEED, gruppen: GRUPPEN_SEED }),
@@ -604,6 +607,7 @@ function PadelhouseApp() {
       loadKey("fanshop-produkte", true, FANSHOP_SEED),
       loadKey("courts", true, COURTS_SEED),
       loadKey("versteckte-kacheln", true, []),
+      loadKey("abo-modelle", true, []),
     ]);
     setSpiele(sp);
     setLigen(lg);
@@ -618,6 +622,7 @@ function PadelhouseApp() {
     setFanshopProdukte(fp);
     setCourts(ct);
     setVersteckteKacheln(versteckt);
+    setAboModelle(am);
     benachrichtigungenLaden().then(setBenachrichtigungen);
   }
 
@@ -642,6 +647,7 @@ function PadelhouseApp() {
   function persistEvents(next) { setEvents(next); saveKey("events", true, next); }
   function persistVormerkungen(next) { setVormerkungen(next); saveKey("fanshop-vormerkungen", false, next); }
   function persistBenefitAnfragen(next) { setBenefitAnfragen(next); saveKey("firmenbenefit-anfragen", false, next); }
+  function persistAboModelle(next) { setAboModelle(next); saveKey("abo-modelle", true, next); }
   function persistThreads(next) { setThreads(next); saveKey("chat-threads", true, next); }
   function persistChatStatus(next) { setChatStatus(next); saveKey("chat-status", false, next); }
   function persistIdeen(next) { setIdeen(next); saveKey("wuensche-ideen", true, next); }
@@ -879,7 +885,7 @@ function PadelhouseApp() {
       )}
 
       {view === "firmenbenefit" && (
-        <FirmenbenefitView anfragen={benefitAnfragen} onSave={persistBenefitAnfragen} />
+        <FirmenbenefitHub anfragen={benefitAnfragen} onSaveAnfragen={persistBenefitAnfragen} aboModelle={aboModelle} onSaveAbo={persistAboModelle} role={role} />
       )}
 
       {view === "hilfe" && <HilfeView />}
@@ -3013,7 +3019,8 @@ const FAQ_DATEN = [
   {
     kategorie: "Firmenbenefit",
     fragen: [
-      { f: "Wie registriere ich mich für Wellpass/Hansefit?", a: "In der Kachel \"Firmenbenefit\" das Formular ausfüllen. Wichtig: Die E-Mail-Adresse muss dieselbe sein wie in deinem Playtomic-Profil." },
+      { f: "Wie registriere ich mich für Wellpass/Hansefit?", a: "In der Kachel \"Firmen-Benefit\" auf die Unter-Kachel \"Firmenbenefit\" tippen und das Formular ausfüllen. Wichtig: Die E-Mail-Adresse muss dieselbe sein wie in deinem Playtomic-Profil." },
+      { f: "Wo finde ich die Abo-Modelle?", a: "In der Kachel \"Firmen-Benefit\" auf die Unter-Kachel \"Abo-Modelle\" tippen. Dort listet der Betreiber die aktuell angebotenen Abos mit Beschreibung und Preis auf." },
     ],
   },
   {
@@ -3300,6 +3307,85 @@ function HilfeView() {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+function FirmenbenefitHub({ anfragen, onSaveAnfragen, aboModelle, onSaveAbo, role }) {
+  const [sub, setSub] = useState(null);
+
+  if (sub === "firmenbenefit") {
+    return (
+      <div>
+        <button onClick={() => setSub(null)} className="text-emerald-400 text-sm mb-4">← Zurück zur Übersicht</button>
+        <FirmenbenefitView anfragen={anfragen} onSave={onSaveAnfragen} />
+      </div>
+    );
+  }
+  if (sub === "abo") {
+    return (
+      <div>
+        <button onClick={() => setSub(null)} className="text-emerald-400 text-sm mb-4">← Zurück zur Übersicht</button>
+        <AboModelleView aboModelle={aboModelle} onSave={onSaveAbo} role={role} />
+      </div>
+    );
+  }
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      <button onClick={() => setSub("firmenbenefit")} className="text-left bg-zinc-900 border border-zinc-800 rounded-lg p-4 hover:border-emerald-600">
+        <div className="text-white font-black uppercase tracking-wide text-sm mb-1">Firmenbenefit</div>
+        <div className="text-zinc-500 text-xs">Wellpass & Hansefit</div>
+      </button>
+      <button onClick={() => setSub("abo")} className="text-left bg-zinc-900 border border-zinc-800 rounded-lg p-4 hover:border-emerald-600">
+        <div className="text-white font-black uppercase tracking-wide text-sm mb-1">Abo-Modelle</div>
+        <div className="text-zinc-500 text-xs">{aboModelle.length > 0 ? aboModelle.length + (aboModelle.length === 1 ? " Modell" : " Modelle") : "Übersicht"}</div>
+      </button>
+    </div>
+  );
+}
+
+function AboModelleView({ aboModelle, onSave, role }) {
+  const [form, setForm] = useState({ titel: "", text: "" });
+
+  function submit(e) {
+    e.preventDefault();
+    if (!form.titel.trim() || !form.text.trim()) return;
+    onSave([...aboModelle, { id: "abo-" + Date.now(), titel: form.titel.trim(), text: form.text.trim() }]);
+    setForm({ titel: "", text: "" });
+  }
+  function loeschen(id) {
+    if (!window.confirm("Dieses Abo-Modell wirklich löschen?")) return;
+    onSave(aboModelle.filter((a) => a.id !== id));
+  }
+
+  return (
+    <div>
+      {role === "admin" && (
+        <form onSubmit={submit} className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 space-y-2 mb-5">
+          <div className="text-xs text-emerald-500 uppercase tracking-wide">Neues Abo-Modell</div>
+          <input className={inputCls} placeholder="Titel (z. B. Monats-Abo)" value={form.titel} onChange={(e) => setForm({ ...form, titel: e.target.value })} />
+          <textarea className={inputCls} placeholder="Beschreibung, Preis, Konditionen..." rows={4} value={form.text} onChange={(e) => setForm({ ...form, text: e.target.value })} />
+          <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">Abo-Modell veröffentlichen</button>
+        </form>
+      )}
+
+      {aboModelle.length === 0 ? (
+        <p className="text-zinc-500 text-sm">Aktuell sind keine Abo-Modelle hinterlegt.</p>
+      ) : (
+        <div className="space-y-3">
+          {aboModelle.map((a) => (
+            <div key={a.id} className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+              <div className="flex items-start justify-between gap-2">
+                <div className="text-white font-bold text-sm">{a.titel}</div>
+                {role === "admin" && (
+                  <button onClick={() => loeschen(a.id)} className="text-red-400 text-[10px] uppercase tracking-wide font-bold shrink-0">Löschen</button>
+                )}
+              </div>
+              <div className="text-zinc-400 text-sm mt-1 whitespace-pre-wrap">{a.text}</div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
