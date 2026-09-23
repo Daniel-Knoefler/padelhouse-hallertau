@@ -127,7 +127,7 @@ const TILE_META = {
   fanshop: { label: "Fanshop", sub: "Merchandise vormerken" },
   chat: { label: "Chat", sub: "Nachrichten" },
   wuensche: { label: "Wünsche & Ideen", sub: "Dein Feedback" },
-  firmenbenefit: { label: "Firmenbenefit & Abo", sub: "Wellpass, Hansefit & Abo-Modelle" },
+  firmenbenefit: { label: "Benefit & Abo", sub: "Wellpass, Hansefit & Abo-Modelle" },
   hilfe: { label: "Hilfe & FAQ", sub: "So funktioniert die App", hint: "+ Rechtliches" },
   regeln: { label: "Spielregeln", sub: "Die offiziellen Padel-Regeln" },
   meine_buchungen: { label: "Meine Buchungen", sub: "Termine & Zugangspin" },
@@ -301,7 +301,7 @@ function Tile({ tileKey, onClick, badge, moveMode, onMoveLeft, onMoveRight, disa
         <div className="w-10 h-10 rounded-lg bg-zinc-200 border-2 border-black text-emerald-500 flex items-center justify-center mb-2">
           <TileIcon tileKey={tileKey} />
         </div>
-        <div className={`text-white font-black uppercase leading-tight tracking-tight ${tileKey === "firmenbenefit" ? "text-[9px] whitespace-nowrap overflow-hidden text-ellipsis" : "text-xs break-words"}`}>{meta.label}</div>
+        <div className="text-white font-black text-xs uppercase leading-tight tracking-tight break-words">{meta.label}</div>
         {meta.hint && <div className="text-emerald-200 text-[10px] uppercase font-normal leading-tight mt-0.5 break-words">{meta.hint}</div>}
       </button>
       {moveMode && (
@@ -3023,8 +3023,8 @@ const FAQ_DATEN = [
   {
     kategorie: "Firmenbenefit",
     fragen: [
-      { f: "Wie registriere ich mich für Wellpass/Hansefit?", a: "In der Kachel \"Firmen-Benefit\" auf die Unter-Kachel \"Firmenbenefit\" tippen und das Formular ausfüllen. Wichtig: Die E-Mail-Adresse muss dieselbe sein wie in deinem Playtomic-Profil." },
-      { f: "Wo finde ich die Abo-Modelle und wie melde ich mich an?", a: "In der Kachel \"Firmenbenefit & Abo\" auf die Unter-Kachel \"Abo-Modelle\" tippen. Dort listet der Betreiber die aktuell angebotenen Abos mit Beschreibung und Preis auf. Beim gewünschten Abo auf \"Anmelden\" tippen, Name und E-Mail eintragen – nach dem Absenden kannst du die Anmeldung zusätzlich direkt per E-Mail oder WhatsApp an den Betreiber schicken." },
+      { f: "Wie registriere ich mich für Wellpass/Hansefit?", a: "In der Kachel \"Benefit & Abo\" auf die Unter-Kachel \"Firmenbenefit\" tippen und das Formular ausfüllen. Wichtig: Die E-Mail-Adresse muss dieselbe sein wie in deinem Playtomic-Profil." },
+      { f: "Wo finde ich die Abo-Modelle und wie melde ich mich an?", a: "In der Kachel \"Benefit & Abo\" auf die Unter-Kachel \"Abo-Modelle\" tippen. Dort listet der Betreiber die aktuell angebotenen Abos mit Beschreibung und Preis auf. Beim gewünschten Abo auf \"Anmelden\" tippen, Name und E-Mail eintragen – nach dem Absenden kannst du die Anmeldung zusätzlich direkt per E-Mail oder WhatsApp an den Betreiber schicken." },
     ],
   },
   {
