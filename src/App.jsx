@@ -301,7 +301,7 @@ function Tile({ tileKey, onClick, badge, moveMode, onMoveLeft, onMoveRight, disa
         <div className="w-10 h-10 rounded-lg bg-zinc-200 border-2 border-black text-emerald-500 flex items-center justify-center mb-2">
           <TileIcon tileKey={tileKey} />
         </div>
-        <div className="text-white font-black text-xs uppercase leading-tight tracking-tight break-words">{meta.label}</div>
+        <div className={`text-white font-black uppercase leading-tight tracking-tight ${tileKey === "firmenbenefit" ? "text-[9px] whitespace-nowrap overflow-hidden text-ellipsis" : "text-xs break-words"}`}>{meta.label}</div>
         {meta.hint && <div className="text-emerald-200 text-[10px] uppercase font-normal leading-tight mt-0.5 break-words">{meta.hint}</div>}
       </button>
       {moveMode && (
