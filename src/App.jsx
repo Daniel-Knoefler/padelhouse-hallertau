@@ -714,16 +714,24 @@ function PadelhouseApp() {
     ? benachrichtigungen.filter((n) => n.created_at > benachrichtigungenGelesenBis).length
     : benachrichtigungen.length;
 
+  // tileOrder kommt aus Supabase und kann älter sein als TILES_DEFAULT (z. B. wenn eine
+  // neue Kachel per Update hinzugekommen ist) – fehlende Kacheln werden hier ergänzt,
+  // damit sie auf der Startseite erscheinen, auch ohne dass jemand "Anordnen" geöffnet hat.
+  const vollstaendigeReihenfolge = useMemo(() => {
+    const vorhandene = tileOrder.filter((k) => TILES_DEFAULT.includes(k));
+    const neueKacheln = TILES_DEFAULT.filter((k) => !vorhandene.includes(k));
+    return [...vorhandene, ...neueKacheln];
+  }, [tileOrder]);
+
   const visibleTiles = useMemo(() => {
-    const gefiltert = tileOrder.filter((k) => TILES_DEFAULT.includes(k));
-    return role === "admin" ? gefiltert : gefiltert.filter((k) => !versteckteKacheln.includes(k));
-  }, [tileOrder, role, versteckteKacheln]);
+    return role === "admin" ? vollstaendigeReihenfolge : vollstaendigeReihenfolge.filter((k) => !versteckteKacheln.includes(k));
+  }, [vollstaendigeReihenfolge, role, versteckteKacheln]);
 
   function moveTile(key, dir) {
-    const idx = tileOrder.indexOf(key);
-    const next = [...tileOrder];
+    const idx = vollstaendigeReihenfolge.indexOf(key);
+    const next = [...vollstaendigeReihenfolge];
     const swapIdx = idx + dir;
-    if (swapIdx < 0 || swapIdx >= next.length) return;
+    if (idx < 0 || swapIdx < 0 || swapIdx >= next.length) return;
     [next[idx], next[swapIdx]] = [next[swapIdx], next[idx]];
     persistOrder(next);
   }
