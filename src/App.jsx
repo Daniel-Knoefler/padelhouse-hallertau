@@ -130,7 +130,7 @@ const TILE_META = {
   firmenbenefit: { label: "Benefit & Abo", sub: "Wellpass, Hansefit & Abo-Modelle" },
   hilfe: { label: "Hilfe & FAQ", sub: "So funktioniert die App", hint: "+ Rechtliches" },
   regeln: { label: "Spielregeln", sub: "Die offiziellen Padel-Regeln" },
-  meine_buchungen: { label: "Meine Buchungen", sub: "Termine & Zugangspin" },
+  meine_buchungen: { label: "Buchungen und Zugang Halle", sub: "Termine & Link zur Türöffnung" },
   benachrichtigungen: { label: "Benachrichtigungen", sub: "Verlauf der Push-Nachrichten" },
   technik: { label: "Technik", sub: "Die wichtigsten Schläge im Video" },
   admin: { label: "Admin", sub: "Verwaltung" },
@@ -3031,7 +3031,8 @@ const FAQ_DATEN = [
     kategorie: "Sonstiges",
     fragen: [
       { f: "Wie buche ich einen Platz?", a: "Über den großen Button \"Platz buchen über Playtomic\" unter den Kacheln auf der Startseite – öffnet auf dem Handy automatisch die Playtomic-App, falls installiert." },
-      { f: "Wie merke ich mir meine gebuchten Termine?", a: "In der Kachel \"Meine Buchungen\" kannst du Datum, Uhrzeit, Court und Zugangspin deiner über Playtomic gebuchten Termine eintragen – beliebig viele, nur für dich sichtbar." },
+      { f: "Wie merke ich mir meine gebuchten Termine?", a: "In der Kachel \"Buchungen und Zugang Halle\" kannst du Datum, Uhrzeit, Court und den Link zur Türöffnung deiner über Playtomic gebuchten Termine eintragen – beliebig viele, nur für dich sichtbar." },
+      { f: "Wie komme ich in die Halle?", a: "Du erhältst per E-Mail einen Link zu einer Seite mit einem Push-Button zum Türöffnen. Trag diesen Link bei deinem Termin in der Kachel \"Buchungen und Zugang Halle\" ein, dann hast du ihn beim Betreten griffbereit." },
       { f: "Kann ich die Reihenfolge der Kacheln ändern?", a: "Ja, auf der Startseite oben rechts auf \"Anordnen\" tippen, dann erscheinen Pfeile zum Verschieben bei jeder Kachel." },
       { f: "Wo sehe ich, ob es etwas Neues gibt?", a: "Kacheln mit neuen Inhalten (Chat, Community, Wünsche & Ideen) zeigen einen grünen Zähler-Badge, der verschwindet, sobald du reinschaust." },
     ],
@@ -3157,12 +3158,12 @@ function BenachrichtigungenView({ benachrichtigungen, onSpringen, onLoeschen, on
 function MeineBuchungenView({ buchungen, onSave, courts, onCourts, role }) {
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState(null);
-  const [form, setForm] = useState({ datum: "", uhrzeitVon: "", uhrzeitBis: "", court: courts[0] || "", zugangspin: "" });
+  const [form, setForm] = useState({ datum: "", uhrzeitVon: "", uhrzeitBis: "", court: courts[0] || "", zugangsLink: "" });
   const [showCourtForm, setShowCourtForm] = useState(false);
   const [courtInput, setCourtInput] = useState("");
 
   function reset() {
-    setForm({ datum: "", uhrzeitVon: "", uhrzeitBis: "", court: courts[0] || "", zugangspin: "" });
+    setForm({ datum: "", uhrzeitVon: "", uhrzeitBis: "", court: courts[0] || "", zugangsLink: "" });
     setEditId(null);
   }
   function openNew() {
@@ -3170,7 +3171,7 @@ function MeineBuchungenView({ buchungen, onSave, courts, onCourts, role }) {
     setShowForm(true);
   }
   function openEdit(b) {
-    setForm({ datum: b.datum, uhrzeitVon: b.uhrzeitVon, uhrzeitBis: b.uhrzeitBis, court: b.court, zugangspin: b.zugangspin });
+    setForm({ datum: b.datum, uhrzeitVon: b.uhrzeitVon, uhrzeitBis: b.uhrzeitBis, court: b.court, zugangsLink: b.zugangsLink });
     setEditId(b.id);
     setShowForm(true);
   }
@@ -3199,7 +3200,7 @@ function MeineBuchungenView({ buchungen, onSave, courts, onCourts, role }) {
 
   return (
     <div>
-      <p className="text-zinc-400 text-sm mb-4">Trag hier deine über Playtomic gebuchten Termine ein, damit du Datum, Uhrzeit, Court und Zugangspin immer griffbereit hast.</p>
+      <p className="text-zinc-400 text-sm mb-4">Trag hier deine über Playtomic gebuchten Termine ein, damit du Datum, Uhrzeit, Court und den Link zur Türöffnung immer griffbereit hast.</p>
 
       <button onClick={openNew} className="w-full mb-4 py-2 rounded-lg bg-emerald-500 text-white font-bold uppercase tracking-wide text-sm">
         Termin eintragen
@@ -3219,7 +3220,11 @@ function MeineBuchungenView({ buchungen, onSave, courts, onCourts, role }) {
             <div key={b.id} className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
               <div className="text-white font-bold">{b.court}</div>
               <div className="text-zinc-500 text-xs mt-1">{b.datum} · {b.uhrzeitVon}{b.uhrzeitBis ? `–${b.uhrzeitBis}` : ""} Uhr</div>
-              {b.zugangspin && <div className="text-emerald-400 text-sm mt-2">Zugangspin: {b.zugangspin}</div>}
+              {b.zugangsLink && (
+                <a href={b.zugangsLink} target="_blank" rel="noopener noreferrer" className="inline-block mt-2 py-1.5 px-3 rounded-lg bg-emerald-500 text-white text-xs font-bold uppercase tracking-wide">
+                  Zur Halle Zugang verschaffen
+                </a>
+              )}
               <div className="flex gap-3 mt-3">
                 <button onClick={() => openEdit(b)} className="text-xs text-emerald-400 uppercase tracking-wide">Bearbeiten</button>
                 <button onClick={() => loeschen(b.id)} className="text-xs text-zinc-500 uppercase tracking-wide">Löschen</button>
@@ -3246,7 +3251,7 @@ function MeineBuchungenView({ buchungen, onSave, courts, onCourts, role }) {
                 {courts.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </Field>
-            <Field label="Zugangspin"><input className={inputCls} value={form.zugangspin} onChange={(e) => setForm({ ...form, zugangspin: e.target.value })} placeholder="z. B. 4821" /></Field>
+            <Field label="Link zur Zugangsseite"><input className={inputCls} type="url" value={form.zugangsLink} onChange={(e) => setForm({ ...form, zugangsLink: e.target.value })} placeholder="https://..." /></Field>
             <div className="flex gap-2 pt-2">
               <button type="button" onClick={() => { setShowForm(false); reset(); }} className="flex-1 py-2 rounded-lg bg-zinc-800 text-zinc-300 text-sm font-bold uppercase tracking-wide">Abbrechen</button>
               <button type="submit" className="flex-1 py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">Speichern</button>
