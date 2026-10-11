@@ -1897,6 +1897,12 @@ function CommunityView({ news, gruppen, role, profile, onNews, onGruppen, onMark
   const [newsForm, setNewsForm] = useState({ title: "", text: "" });
   const [omGruppe, setOmGruppe] = useState(null);
   const [omText, setOmText] = useState("");
+  const [omDatum, setOmDatum] = useState("");
+  const [omUhrzeit, setOmUhrzeit] = useState("");
+  const [omOrt, setOmOrt] = useState("Padelhouse Hallertau");
+  const [omSpieler, setOmSpieler] = useState("");
+  const [omOffenePlaetze, setOmOffenePlaetze] = useState("1");
+  const [omPasteText, setOmPasteText] = useState("");
   const [showGruppeForm, setShowGruppeForm] = useState(false);
   const [gruppeName, setGruppeName] = useState("");
   const [addBackId, setAddBackId] = useState("");
@@ -1949,10 +1955,41 @@ function CommunityView({ news, gruppen, role, profile, onNews, onGruppen, onMark
   }
   function addOpenMatch(e) {
     e.preventDefault();
-    if (!omText.trim()) return;
-    const next = gruppen.map((g) => g.id === omGruppe ? { ...g, openMatches: [...g.openMatches, { id: "om-" + Date.now(), text: omText, link: omLink, ersteller: profile.profilname || profile.name || "Gast" }] } : g);
+    if (!omDatum && !omText.trim()) return;
+    const spielerListe = omSpieler.split(",").map((s) => s.trim()).filter(Boolean);
+    const neuesMatch = {
+      id: "om-" + Date.now(),
+      ersteller: profile.profilname || profile.name || "Gast",
+      datum: omDatum,
+      uhrzeit: omUhrzeit,
+      ort: omOrt.trim(),
+      spieler: spielerListe,
+      offenePlaetze: Math.max(0, parseInt(omOffenePlaetze, 10) || 0),
+      text: omText.trim(),
+      link: omLink,
+    };
+    const next = gruppen.map((g) => g.id === omGruppe ? { ...g, openMatches: [...g.openMatches, neuesMatch] } : g);
     onGruppen(next);
-    setOmText(""); setOmLink(""); setOmGruppe(null);
+    setOmText(""); setOmDatum(""); setOmUhrzeit(""); setOmOrt("Padelhouse Hallertau"); setOmSpieler(""); setOmOffenePlaetze("1"); setOmLink(""); setOmPasteText(""); setOmGruppe(null);
+  }
+  function omAusTextUebernehmen() {
+    if (!omPasteText.trim()) return;
+    const geparst = parsePlaytomicText(omPasteText);
+    if (geparst.datum) setOmDatum(geparst.datum);
+    if (geparst.uhrzeit) setOmUhrzeit(geparst.uhrzeit);
+    if (geparst.ort) setOmOrt(geparst.ort);
+    if (geparst.spieler.length > 0) setOmSpieler(geparst.spieler.join(", "));
+    if (geparst.offenePlaetze > 0) setOmOffenePlaetze(String(geparst.offenePlaetze));
+    if (geparst.link) setOmLink(geparst.link);
+  }
+  function formatiereOmDatum(iso) {
+    if (!iso) return "";
+    try {
+      const d = new Date(iso + "T00:00:00");
+      return d.toLocaleDateString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit" });
+    } catch (e) {
+      return iso;
+    }
   }
   function addGruppe(e) {
     e.preventDefault();
@@ -2076,21 +2113,47 @@ function CommunityView({ news, gruppen, role, profile, onNews, onGruppen, onMark
             ) : (
               <div className="space-y-2 mb-3">
                 {g.openMatches.map((om) => (
-                  <div key={om.id} className="text-xs text-zinc-300 bg-zinc-950 border border-zinc-800 rounded px-2 py-2">
-                    <div className="flex justify-between items-start gap-2">
-                      <div><span className="text-emerald-400">{om.ersteller}:</span> {om.text}</div>
+                  <div key={om.id} className="text-xs rounded-lg px-3 py-2.5 text-white" style={{ background: "#0b2e10" }}>
+                    <div className="flex justify-between items-start gap-2 mb-1">
+                      <div className="font-black uppercase text-[11px] tracking-wide">🎾 Open Match</div>
                       {role === "admin" && (
-                        <button onClick={() => onGruppen(gruppen.map((gg) => gg.id === g.id ? { ...gg, openMatches: gg.openMatches.filter((x) => x.id !== om.id) } : gg))} className="text-zinc-500 uppercase tracking-wide shrink-0">Löschen</button>
+                        <button onClick={() => onGruppen(gruppen.map((gg) => gg.id === g.id ? { ...gg, openMatches: gg.openMatches.filter((x) => x.id !== om.id) } : gg))} className="text-zinc-400 uppercase tracking-wide shrink-0">Löschen</button>
                       )}
                     </div>
-                    {om.link && <a href={om.link} target="_blank" rel="noopener noreferrer" className="text-emerald-400 underline underline-offset-2 mt-1 inline-block">Match in Playtomic öffnen</a>}
+                    {om.datum ? (
+                      <div className="space-y-0.5">
+                        <div>📅 {formatiereOmDatum(om.datum)}{om.uhrzeit ? `, ${om.uhrzeit} Uhr` : ""}</div>
+                        {om.ort && <div>📍 {om.ort}</div>}
+                        {(om.spieler || []).map((name, i) => <div key={i}>✅ {name}</div>)}
+                        {Array.from({ length: om.offenePlaetze || 0 }).map((_, i) => <div key={i}>⚪ Noch offen</div>)}
+                        {om.text && <div className="text-zinc-300 mt-1">{om.text}</div>}
+                      </div>
+                    ) : (
+                      <div className="text-zinc-300">{om.text}</div>
+                    )}
+                    {om.link && <a href={om.link} target="_blank" rel="noopener noreferrer" className="text-emerald-300 underline underline-offset-2 mt-1.5 inline-block">Match in Playtomic öffnen</a>}
+                    <div className="text-zinc-400 text-[10px] mt-1.5">von {om.ersteller}</div>
                   </div>
                 ))}
               </div>
             )}
             {omGruppe === g.id ? (
               <form onSubmit={addOpenMatch} className="space-y-2 mb-4">
-                <input className={inputCls} placeholder="z. B. Suche 1 Mitspieler, Sa 10 Uhr" value={omText} onChange={(e) => setOmText(e.target.value)} />
+                <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-3 space-y-2">
+                  <div className="text-[11px] text-zinc-400">Playtomic-Freigabetext einfügen (z. B. aus WhatsApp kopiert) – füllt die Felder unten automatisch aus:</div>
+                  <textarea className={inputCls} rows={3} placeholder={"MATCH IN PADEL HAUS\n📅 Samstag, 10. Okt., 16:00\n📍 Großmehring\n✅ Steffi\n..."} value={omPasteText} onChange={(e) => setOmPasteText(e.target.value)} />
+                  <button type="button" onClick={omAusTextUebernehmen} className="w-full py-1.5 rounded-lg bg-zinc-800 text-emerald-400 text-xs font-bold uppercase tracking-wide">Felder automatisch ausfüllen</button>
+                </div>
+                <div className="flex gap-2">
+                  <input className={inputCls} type="date" value={omDatum} onChange={(e) => setOmDatum(e.target.value)} />
+                  <input className={inputCls} type="time" value={omUhrzeit} onChange={(e) => setOmUhrzeit(e.target.value)} />
+                </div>
+                <input className={inputCls} placeholder="Ort" value={omOrt} onChange={(e) => setOmOrt(e.target.value)} />
+                <input className={inputCls} placeholder="Mitspieler, mit Komma getrennt (z. B. Steffi, Stephi, Evie)" value={omSpieler} onChange={(e) => setOmSpieler(e.target.value)} />
+                <Field label="Noch offene Plätze">
+                  <input className={inputCls} type="number" min="0" max="3" value={omOffenePlaetze} onChange={(e) => setOmOffenePlaetze(e.target.value)} />
+                </Field>
+                <input className={inputCls} placeholder="Zusätzlicher Hinweis (optional)" value={omText} onChange={(e) => setOmText(e.target.value)} />
                 <input className={inputCls} placeholder="Playtomic-Link (optional)" value={omLink} onChange={(e) => setOmLink(e.target.value)} />
                 <button type="submit" className="w-full py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide">Teilen</button>
               </form>
@@ -2372,6 +2435,60 @@ function whatsappLink(text) {
 }
 function zahlungsartText(z) {
   return z === "bar" ? "Barzahlung vor Ort" : z === "paypal" ? "Bereits per PayPal bezahlt" : "Überweisung";
+}
+
+const OM_MONATE = { jan: 1, feb: 2, mae: 3, mär: 3, mar: 3, apr: 4, mai: 5, jun: 6, jul: 7, aug: 8, sep: 9, okt: 10, nov: 11, dez: 12 };
+
+// Liest den Text, den Playtomic/Spieler beim Teilen eines Open Matches erzeugen (z. B. aus WhatsApp
+// kopiert), und füllt daraus Datum, Uhrzeit, Ort, Mitspieler, offene Plätze und Link automatisch.
+// Direktes automatisches Abrufen allein aus dem Playtomic-Link ist nicht möglich: Playtomic bietet
+// dafür keine öffentliche Schnittstelle an und die Seite lässt sich nicht einfach von außen auslesen
+// (sie baut sich erst im Browser per JavaScript auf) – das Einfügen des Textes ersetzt das Abtippen.
+function parsePlaytomicText(rohtext) {
+  const ergebnis = { datum: "", uhrzeit: "", ort: "", spieler: [], offenePlaetze: 0, link: "" };
+  const zeilen = rohtext.split("\n").map((z) => z.trim()).filter(Boolean);
+
+  for (const zeile of zeilen) {
+    if (/📅/.test(zeile)) {
+      const tagMatch = zeile.match(/(\d{1,2})\.\s*([A-Za-zÄÖÜäöü]+)\.?/);
+      const zeitMatch = zeile.match(/(\d{1,2}):(\d{2})/);
+      if (tagMatch) {
+        const tag = parseInt(tagMatch[1], 10);
+        const monatSchluessel = tagMatch[2].toLowerCase().slice(0, 3);
+        const monat = OM_MONATE[monatSchluessel];
+        if (monat && tag >= 1 && tag <= 31) {
+          const heute = new Date();
+          let jahr = heute.getFullYear();
+          const kandidat = new Date(jahr, monat - 1, tag);
+          const heuteOhneZeit = new Date(heute.getFullYear(), heute.getMonth(), heute.getDate());
+          if (kandidat < heuteOhneZeit) jahr += 1;
+          ergebnis.datum = `${jahr}-${String(monat).padStart(2, "0")}-${String(tag).padStart(2, "0")}`;
+        }
+      }
+      if (zeitMatch) ergebnis.uhrzeit = `${zeitMatch[1].padStart(2, "0")}:${zeitMatch[2]}`;
+      continue;
+    }
+    if (/📍/.test(zeile)) {
+      const ort = zeile.replace(/📍/g, "").trim();
+      if (ort) ergebnis.ort = ort;
+      continue;
+    }
+    if (/✅/.test(zeile)) {
+      let name = zeile.replace(/✅/g, "").replace(/[✨~]/g, "").trim();
+      name = name.replace(/\([\d.,]+\)\s*$/, "").trim();
+      if (name) ergebnis.spieler.push(name);
+      continue;
+    }
+    if (/⚪|❓|\?\?/.test(zeile)) {
+      ergebnis.offenePlaetze += 1;
+      continue;
+    }
+    const linkMatch = zeile.match(/https?:\/\/\S+/);
+    if (linkMatch) {
+      ergebnis.link = linkMatch[0];
+    }
+  }
+  return ergebnis;
 }
 
 function BuchungView({ anfragen, onAnfragen, turniere, onTurniere, events, onEvents, role, preisProStunde, onPreis }) {
@@ -3001,7 +3118,7 @@ const FAQ_DATEN = [
       { f: "Wer darf News posten?", a: "Nur der Betreiber (Admin). Du kannst sie aber jederzeit lesen." },
       { f: "Wie trete ich einer Gruppe bei?", a: "Community → Gruppen → auf eine Gruppe tippen → \"Beitreten\". Dort findest du auch den Gruppen-Chat und kannst offene Matches (Open Matches) teilen." },
       { f: "Kann ich eine Gruppe ausblenden oder stummschalten?", a: "Ja. Auf der Gruppen-Karte oben rechts die Glocke antippen zum Stummschalten, \"Entfernen\" zum Ausblenden. Ausgeblendete Gruppen lassen sich über das Dropdown oben jederzeit wieder einblenden." },
-      { f: "Wie teile ich ein Open Match aus Playtomic?", a: "In der Gruppen-Detailansicht \"Open Match teilen\" antippen, Text eingeben und optional den Playtomic-Link des Matches einfügen." },
+      { f: "Wie teile ich ein Open Match aus Playtomic?", a: "In der Gruppen-Detailansicht \"Open Match teilen\" antippen. Am schnellsten: den Freigabetext aus Playtomic/WhatsApp ins obere Feld einfügen und \"Felder automatisch ausfüllen\" antippen – Datum, Uhrzeit, Ort, Mitspieler und offene Plätze werden dann automatisch übernommen (danach bei Bedarf korrigieren). Alternativ alle Felder von Hand eintragen." },
     ],
   },
   {
