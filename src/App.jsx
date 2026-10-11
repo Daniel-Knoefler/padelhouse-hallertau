@@ -3595,6 +3595,7 @@ function ErklaervideosView({ videos, onSave, role }) {
   const [hochladen, setHochladen] = useState(false);
   const [fehler, setFehler] = useState("");
   const fileInputRef = useRef(null);
+  const [aktiv, setAktiv] = useState(null);
 
   async function submit(e) {
     e.preventDefault();
@@ -3645,6 +3646,28 @@ function ErklaervideosView({ videos, onSave, role }) {
       }
     }
     onSave(videos.filter((x) => x.id !== v.id));
+    if (aktiv && aktiv.id === v.id) setAktiv(null);
+  }
+
+  if (aktiv) {
+    return (
+      <div>
+        <button onClick={() => setAktiv(null)} className="text-emerald-400 text-sm mb-4">← Alle Erklärvideos</button>
+        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+          <div className="flex items-start justify-between gap-2 mb-3">
+            <div className="text-white font-bold text-sm">{aktiv.titel}</div>
+            {role === "admin" && (
+              <button onClick={() => loeschen(aktiv)} className="text-red-400 text-[10px] uppercase tracking-wide font-bold shrink-0">Löschen</button>
+            )}
+          </div>
+          {aktiv.typ === "foto" ? (
+            <img src={aktiv.url} alt={aktiv.titel} className="w-full rounded-lg bg-black object-contain" />
+          ) : (
+            <video controls autoPlay preload="metadata" className="w-full rounded-lg bg-black" src={aktiv.url} />
+          )}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -3665,21 +3688,18 @@ function ErklaervideosView({ videos, onSave, role }) {
       {videos.length === 0 ? (
         <p className="text-zinc-500 text-sm">Aktuell sind keine Erklärvideos oder Fotos hinterlegt.</p>
       ) : (
-        <div className="space-y-4">
+        <div className="grid grid-cols-3 gap-2.5">
           {videos.map((v) => (
-            <div key={v.id} className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <div className="text-white font-bold text-sm">{v.titel}</div>
-                {role === "admin" && (
-                  <button onClick={() => loeschen(v)} className="text-red-400 text-[10px] uppercase tracking-wide font-bold shrink-0">Löschen</button>
-                )}
-              </div>
+            <button key={v.id} onClick={() => setAktiv(v)} className="relative rounded-xl p-3 min-w-0 border-2 border-white text-left" style={{ background: "#1C5E27" }}>
               {v.typ === "foto" ? (
-                <img src={v.url} alt={v.titel} className="w-full rounded-lg bg-black object-contain" />
+                <img src={v.url} alt="" className="w-10 h-10 rounded-lg object-cover border-2 border-black mb-2" />
               ) : (
-                <video controls preload="metadata" className="w-full rounded-lg bg-black" src={v.url} />
+                <div className="w-10 h-10 rounded-lg bg-zinc-200 border-2 border-black text-emerald-500 flex items-center justify-center mb-2">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M10 9.5v5l4.5-2.5Z" fill="currentColor" stroke="none" /></svg>
+                </div>
               )}
-            </div>
+              <div className="text-white font-black text-xs uppercase leading-tight tracking-tight break-words">{v.titel}</div>
+            </button>
           ))}
         </div>
       )}
