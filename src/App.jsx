@@ -422,21 +422,34 @@ function PadelhouseApp() {
   function ladeNutzerliste() {
     setShowNutzerliste(true);
     setNutzerListe(null);
-    supabase
-      .from("app_storage")
-      .select("scope_id, value, updated_at")
-      .eq("storage_key", "mein-profil")
-      .then(({ data }) => {
-        const liste = (data || [])
-          .map((row) => ({ scopeId: row.scope_id, name: row.value?.name || row.value?.profilname || "", email: row.value?.email || "", zuletzt: row.updated_at }))
-          .filter((n) => n.name.trim())
-          .sort((a, b) => a.name.localeCompare(b.name, "de"));
-        setNutzerListe(liste);
+    Promise.all([
+      supabase.from("app_storage").select("scope_id, value, updated_at").eq("storage_key", "mein-profil"),
+      supabase.from("app_storage").select("scope_id, value").eq("storage_key", "app-erstbesuch"),
+    ]).then(([profilRes, erstbesuchRes]) => {
+      const profilNachScope = {};
+      (profilRes.data || []).forEach((row) => {
+        profilNachScope[row.scope_id] = { name: row.value?.name || row.value?.profilname || "", email: row.value?.email || "" };
       });
+      const erstbesuchNachScope = {};
+      (erstbesuchRes.data || []).forEach((row) => { erstbesuchNachScope[row.scope_id] = row.value; });
+      const alleScopeIds = new Set([...Object.keys(profilNachScope), ...Object.keys(erstbesuchNachScope)]);
+      const liste = Array.from(alleScopeIds).map((scopeId) => ({
+        scopeId,
+        name: profilNachScope[scopeId]?.name || "",
+        email: profilNachScope[scopeId]?.email || "",
+        erstbesuch: erstbesuchNachScope[scopeId] || null,
+      }));
+      liste.sort((a, b) => {
+        if (!!a.name !== !!b.name) return a.name ? -1 : 1;
+        if (a.name && b.name) return a.name.localeCompare(b.name, "de");
+        return (b.erstbesuch || "").localeCompare(a.erstbesuch || "");
+      });
+      setNutzerListe(liste);
+    });
   }
 
   async function eintragAusNutzerlisteLoeschen(scopeId, name) {
-    if (!window.confirm(`Eintrag "${name}" wirklich entfernen? Das löscht das gespeicherte Profil auf diesem Gerät (Name, E-Mail, Telefon) und zählt auch beim App-Nutzer-Zähler nicht mehr mit.`)) return;
+    if (!window.confirm(`Eintrag "${name || "ohne Namen"}" wirklich entfernen? Das löscht das gespeicherte Profil auf diesem Gerät (Name, E-Mail, Telefon) und zählt auch beim App-Nutzer-Zähler nicht mehr mit.`)) return;
     const { error } = await supabase.from("app_storage").delete().eq("scope_id", scopeId).in("storage_key", ["mein-profil", "app-erstbesuch"]);
     if (error) {
       window.alert("Löschen fehlgeschlagen: " + error.message);
@@ -970,15 +983,18 @@ function PadelhouseApp() {
           {nutzerListe === null ? (
             <p className="text-zinc-500 text-sm">Lädt...</p>
           ) : nutzerListe.length === 0 ? (
-            <p className="text-zinc-500 text-sm">Noch keine Namen hinterlegt.</p>
+            <p className="text-zinc-500 text-sm">Noch keine App-Nutzer erfasst.</p>
           ) : (
             <div className="space-y-1.5 max-h-[60vh] overflow-y-auto">
-              <p className="text-zinc-500 text-xs mb-2">{nutzerListe.length} Person(en) mit hinterlegtem Namen. Nur intern sichtbar, nicht teilen.</p>
+              <p className="text-zinc-500 text-xs mb-2">
+                {nutzerListe.length} App-Nutzer insgesamt, davon {nutzerListe.filter((n) => n.name).length} mit hinterlegtem Namen. Nur intern sichtbar, nicht teilen.
+              </p>
               {nutzerListe.map((n, i) => (
                 <div key={i} className="bg-zinc-900 border border-zinc-800 rounded-lg p-3 flex items-center justify-between gap-2">
                   <div>
-                    <div className="text-white font-bold text-sm">{n.name}</div>
+                    <div className={n.name ? "text-white font-bold text-sm" : "text-zinc-500 italic text-sm"}>{n.name || "Kein Name hinterlegt"}</div>
                     {n.email && <div className="text-zinc-500 text-xs mt-0.5">{n.email}</div>}
+                    {n.erstbesuch && <div className="text-zinc-600 text-[11px] mt-0.5">Erster Besuch: {new Date(n.erstbesuch).toLocaleDateString("de-DE")}</div>}
                   </div>
                   <button onClick={() => eintragAusNutzerlisteLoeschen(n.scopeId, n.name)} className="text-red-400 text-xs uppercase tracking-wide font-bold shrink-0">Entfernen</button>
                 </div>
