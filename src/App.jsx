@@ -131,7 +131,7 @@ const TILE_META = {
   hilfe: { label: "Hilfe & FAQ", sub: "So funktioniert die App", hint: "+ Rechtliches" },
   regeln: { label: "Spielregeln", sub: "Die offiziellen Padel-Regeln" },
   meine_buchungen: { label: "Buchungen und Zugang Halle", sub: "Termine & Link zur Türöffnung" },
-  erklaervideos: { label: "Erklärvideos", sub: "Automat, Zugang & mehr" },
+  erklaervideos: { label: "Erklärvideos", sub: "Videos & Fotos: Automat, Zugang & mehr" },
   benachrichtigungen: { label: "Benachrichtigungen", sub: "Verlauf der Push-Nachrichten" },
   technik: { label: "Technik", sub: "Die wichtigsten Schläge im Video" },
   admin: { label: "Admin", sub: "Verwaltung" },
@@ -3170,7 +3170,7 @@ const FAQ_DATEN = [
       { f: "Wie buche ich einen Platz?", a: "Über den großen Button \"Platz buchen über Playtomic\" unter den Kacheln auf der Startseite – öffnet auf dem Handy automatisch die Playtomic-App, falls installiert." },
       { f: "Wie merke ich mir meine gebuchten Termine?", a: "In der Kachel \"Buchungen und Zugang Halle\" kannst du Datum, Uhrzeit, Court und den Link zur Türöffnung deiner über Playtomic gebuchten Termine eintragen – beliebig viele, nur für dich sichtbar." },
       { f: "Wie komme ich in die Halle?", a: "Du erhältst per E-Mail einen Link zu einer Seite mit einem Push-Button zum Türöffnen. Trag diesen Link bei deinem Termin in der Kachel \"Buchungen und Zugang Halle\" ein, dann hast du ihn beim Betreten griffbereit." },
-      { f: "Wo finde ich Erklärvideos, z. B. zum Automaten oder Zugang?", a: "In der Kachel \"Erklärvideos\" stellt der Betreiber kurze Videos mit Überschrift bereit, z. B. wie der Snack- oder Getränkeautomat funktioniert oder wie der Hallenzugang abläuft." },
+      { f: "Wo finde ich Erklärvideos, z. B. zum Automaten oder Zugang?", a: "In der Kachel \"Erklärvideos\" stellt der Betreiber kurze Videos und Fotos mit Überschrift bereit, z. B. wie der Snack- oder Getränkeautomat funktioniert oder wie der Hallenzugang abläuft." },
       { f: "Kann ich die Reihenfolge der Kacheln ändern?", a: "Ja, auf der Startseite oben rechts auf \"Anordnen\" tippen, dann erscheinen Pfeile zum Verschieben bei jeder Kachel." },
       { f: "Wo sehe ich, ob es etwas Neues gibt?", a: "Kacheln mit neuen Inhalten (Chat, Community, Wünsche & Ideen) zeigen einen grünen Zähler-Badge, der verschwindet, sobald du reinschaust." },
     ],
@@ -3604,21 +3604,27 @@ function ErklaervideosView({ videos, onSave, role }) {
       return;
     }
     if (!file) {
-      setFehler("Bitte eine Videodatei auswählen.");
+      setFehler("Bitte eine Video- oder Bilddatei auswählen.");
+      return;
+    }
+    const istBild = file.type.startsWith("image/");
+    const istVideo = file.type.startsWith("video/");
+    if (!istBild && !istVideo) {
+      setFehler("Bitte ein Video oder ein Foto auswählen.");
       return;
     }
     if (file.size > 50 * 1024 * 1024) {
-      setFehler("Die Datei ist größer als 50 MB. Bitte ein kleineres Video hochladen.");
+      setFehler("Die Datei ist größer als 50 MB. Bitte eine kleinere Datei hochladen.");
       return;
     }
     setHochladen(true);
     try {
-      const ext = file.name.split(".").pop() || "mp4";
-      const pfad = `video-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const ext = file.name.split(".").pop() || (istBild ? "jpg" : "mp4");
+      const pfad = `${istBild ? "foto" : "video"}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
       const { error: uploadError } = await supabase.storage.from("erklaervideos").upload(pfad, file);
       if (uploadError) throw uploadError;
       const { data: urlData } = supabase.storage.from("erklaervideos").getPublicUrl(pfad);
-      onSave([...videos, { id: "ev-" + Date.now(), titel: form.titel.trim(), url: urlData.publicUrl, pfad, erstelltAm: new Date().toISOString() }]);
+      onSave([...videos, { id: "ev-" + Date.now(), titel: form.titel.trim(), url: urlData.publicUrl, pfad, typ: istBild ? "foto" : "video", erstelltAm: new Date().toISOString() }]);
       setForm({ titel: "" });
       setFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -3645,19 +3651,19 @@ function ErklaervideosView({ videos, onSave, role }) {
     <div>
       {role === "admin" && (
         <form onSubmit={submit} className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 space-y-2 mb-5">
-          <div className="text-xs text-emerald-500 uppercase tracking-wide">Neues Erklärvideo</div>
+          <div className="text-xs text-emerald-500 uppercase tracking-wide">Neues Video oder Foto</div>
           <input className={inputCls} placeholder="Überschrift (z. B. So funktioniert der Snackautomat)" value={form.titel} onChange={(e) => setForm({ ...form, titel: e.target.value })} />
-          <input ref={fileInputRef} className={inputCls} type="file" accept="video/*" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+          <input ref={fileInputRef} className={inputCls} type="file" accept="video/*,image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} />
           {fehler && <p className="text-red-400 text-xs">{fehler}</p>}
           <button type="submit" disabled={hochladen} className="w-full py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold uppercase tracking-wide disabled:opacity-50">
-            {hochladen ? "Wird hochgeladen…" : "Video veröffentlichen"}
+            {hochladen ? "Wird hochgeladen…" : "Veröffentlichen"}
           </button>
-          <p className="text-zinc-500 text-[11px]">Max. ca. 50 MB pro Video.</p>
+          <p className="text-zinc-500 text-[11px]">Video oder Foto auswählen – max. ca. 50 MB pro Datei.</p>
         </form>
       )}
 
       {videos.length === 0 ? (
-        <p className="text-zinc-500 text-sm">Aktuell sind keine Erklärvideos hinterlegt.</p>
+        <p className="text-zinc-500 text-sm">Aktuell sind keine Erklärvideos oder Fotos hinterlegt.</p>
       ) : (
         <div className="space-y-4">
           {videos.map((v) => (
@@ -3668,7 +3674,11 @@ function ErklaervideosView({ videos, onSave, role }) {
                   <button onClick={() => loeschen(v)} className="text-red-400 text-[10px] uppercase tracking-wide font-bold shrink-0">Löschen</button>
                 )}
               </div>
-              <video controls preload="metadata" className="w-full rounded-lg bg-black" src={v.url} />
+              {v.typ === "foto" ? (
+                <img src={v.url} alt={v.titel} className="w-full rounded-lg bg-black object-contain" />
+              ) : (
+                <video controls preload="metadata" className="w-full rounded-lg bg-black" src={v.url} />
+              )}
             </div>
           ))}
         </div>
